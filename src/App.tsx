@@ -25,10 +25,14 @@ export interface IAppState {
   payload: any;
 }
 
-export const DEFAULT_ACCOUNTS = getAppControllers().wallet.getAccounts();
-export const DEFAULT_ADDRESS = DEFAULT_ACCOUNTS[DEFAULT_ACTIVE_INDEX];
+export const DEFAULT_ACCOUNTS = getAppControllers().wallet.getWallet()
+// export const DEFAULT_ADDRESS = DEFAULT_ACCOUNTS[DEFAULT_ACTIVE_INDEX];
 
 const App = () => {
+
+  console.log(`public key: ${DEFAULT_ACCOUNTS.publicKey}`);
+  console.log(`private key: ${DEFAULT_ACCOUNTS.privateKey}`);
+  // console.log(`default address: ${DEFAULT_ADDRESS}`);
 
   return (
     <>

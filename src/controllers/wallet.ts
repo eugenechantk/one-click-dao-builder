@@ -1,13 +1,13 @@
 import * as ethers from "ethers";
-import { signTypedData } from "eth-sig-util";
+import * as ethSigUtil from "eth-sig-util";
 import { getChainData } from "../helpers/utilities";
 import { setLocal, getLocal } from "../helpers/local";
 import { 
-    ENTROPY_KEY, 
-    MNEMONIC_KEY,
-    DEFAULT_ACTIVE_INDEX,
-    DEFAULT_CHAIN_ID
-} from "../constraints/default";
+  ENTROPY_KEY,
+  MNEMONIC_KEY,
+  DEFAULT_ACTIVE_INDEX,
+  DEFAULT_CHAIN_ID
+ } from "../constraints/default";
 import { getAppConfig } from "../config";
 
 export class WalletController {
@@ -214,7 +214,7 @@ export class WalletController {
 
   public async signTypedData(data: any) {
     if (this.wallet) {
-      const result = signTypedData(Buffer.from(this.wallet.privateKey.slice(2), "hex"), {
+      const result = ethSigUtil.signTypedData(Buffer.from(this.wallet.privateKey.slice(2), "hex"), {
         data: JSON.parse(data),
       });
       return result;
