@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@magic-ext/connect": "^2.0.2",
+    "@metamask/eth-sig-util": "^5.0.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^14.2.0",
@@ -48,6 +49,7 @@
     ]
   },
   "devDependencies": {
+    "@types/eth-sig-util": "^2.1.1",
     "assert": "^2.0.0",
     "react-app-rewired": "^2.2.1",
     "stream": "^0.0.2"
