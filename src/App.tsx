@@ -1,7 +1,7 @@
 import * as React from "react";
 import WalletConnect from "@walletconnect/client";
 import { getAppControllers } from "./controllers";
-import { DEFAULT_ACTIVE_INDEX } from "./constraints/default";
+// import { DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 
 export interface IAppState {
   loading: boolean;

@@ -1,10 +1,7 @@
 import * as ethers from "ethers";
 import * as ethSigUtil from "eth-sig-util";
 import { getChainData } from "../helpers/utilities";
-import { setLocal, getLocal } from "../helpers/local";
 import { 
-  ENTROPY_KEY,
-  MNEMONIC_KEY,
   DEFAULT_ACTIVE_INDEX,
   DEFAULT_CHAIN_ID
  } from "../constraints/default";
@@ -12,7 +9,7 @@ import { getAppConfig } from "../config";
 
 export class WalletController {
   public path: string;
-  public entropy: string;
+  // public entropy: string;
   public mnemonic: string;
   public wallet: ethers.Wallet;
 
@@ -21,7 +18,7 @@ export class WalletController {
 
   constructor() {
     this.path = this.getPath();
-    this.entropy = this.getEntropy();
+    // this.entropy = this.getEntropy();
     this.mnemonic = this.getMnemonic();
     this.wallet = this.init();
   }
@@ -58,37 +55,38 @@ export class WalletController {
     return accounts;
   }
 
-  public getData(key: string): string {
-    let value = getLocal(key);
-    if (!value) {
-      switch (key) {
-        case ENTROPY_KEY:
-          value = this.generateEntropy();
-          break;
-        case MNEMONIC_KEY:
-          value = this.generateMnemonic();
-          break;
-        default:
-          throw new Error(`Unknown data key: ${key}`);
-      }
-      setLocal(key, value);
-    }
-    return value;
-  }
+  // HELPER FUNCTIONS: generate entropy and mnemonic and put that in localStorage, and then fetch those from localStorage
+  //
+  // public getData(key: string): string {
+  //   // let value = getLocal(key);
+  //   // if (!value) {
+  //   //   switch (key) {
+  //   //     case ENTROPY_KEY:
+  //   //       value = this.generateEntropy();
+  //   //       break;
+  //   //     case MNEMONIC_KEY:
+  //   //       value = this.generateMnemonic();
+  //   //       break;
+  //   //     default:
+  //   //       throw new Error(`Unknown data key: ${key}`);
+  //   //   }
+  //   setLocal(key, value);
+  //   return value;
+  // }
+  //
+  // public generateEntropy(): string {
+  //   this.entropy = ethers.utils.hexlify(ethers.utils.randomBytes(16));
+  //   return this.entropy;
+  // }
+
+  // public generateMnemonic() {
+  //   this.mnemonic = ethers.utils.entropyToMnemonic(this.getEntropy());
+  //   return this.mnemonic;
+  // }
 
   public getPath(index: number = this.activeIndex) {
     this.path = `${getAppConfig().derivationPath}/${index}`;
     return this.path;
-  }
-
-  public generateEntropy(): string {
-    this.entropy = ethers.utils.hexlify(ethers.utils.randomBytes(16));
-    return this.entropy;
-  }
-
-  public generateMnemonic() {
-    this.mnemonic = ethers.utils.entropyToMnemonic(this.getEntropy());
-    return this.mnemonic;
   }
 
   public generateWallet(index: number) {
@@ -96,12 +94,17 @@ export class WalletController {
     return this.wallet;
   }
 
-  public getEntropy(): string {
-    return this.getData(ENTROPY_KEY);
-  }
+  // HELPER FUNCTION: get entropy in order to generate the mnemonic for the wallet
+  // public getEntropy(): string {
+  //   // TODO: change this to get the entropy from club record
+  //   this.entropy = String(process.env.REACT_APP_ENTROPY);
+  //   return this.entropy;
+  // }
 
   public getMnemonic(): string {
-    return this.getData(MNEMONIC_KEY);
+    // TODO: change this to get the mnemonic from club record
+    this.mnemonic = String(process.env.REACT_APP_MNEMONIC);
+    return this.mnemonic;
   }
 
   public init(index = DEFAULT_ACTIVE_INDEX, chainId = DEFAULT_CHAIN_ID): ethers.Wallet {
