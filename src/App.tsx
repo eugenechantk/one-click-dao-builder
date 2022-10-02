@@ -98,6 +98,7 @@ class App extends React.Component<{}> {
   public bindedSetState = (newState: Partial<IAppState>) =>
     this.setState(newState);
 
+  // NOTES: Subscribing to the different events emitted by the connector
   public subscribeToEvents = () => {
     console.log("ACTION", "subscribeToEvents");
     const { connector } = this.state;
@@ -179,30 +180,55 @@ class App extends React.Component<{}> {
     this.init();
   };
 
+
   public initWalletConnect = async () => {
     const { uri } = this.state;
 
     this.setState({ loading: true });
 
     try {
+      // Instantiate a new WalletConnect connector to connect to dapps
       const connector = new WalletConnect({ uri });
 
       if (!connector.connected) {
+        // Create a new session with the WalletConnect connector
         await connector.createSession();
       }
 
+      // Store the connector to the specific dapp in the states
       await this.setState({
         loading: false,
         connector,
         uri: connector.uri,
       });
 
+      // Call the event subscriber to get to know what is the event emitted by connector
       this.subscribeToEvents();
+
     } catch (error) {
       this.setState({ loading: false });
 
       throw error;
     }
+  };
+
+  public approveSession = () => {
+    console.log("ACTION", "approveSession");
+    const { connector, chainId, address } = this.state;
+    if (connector) {
+      // Approve the session connected by this state's connector
+      connector.approveSession({ chainId, accounts: [address] });
+    }
+    this.setState({ connector });
+  };
+
+  public killSession = () => {
+    console.log("ACTION", "killSession");
+    const { connector } = this.state;
+    if (connector) {
+      connector.killSession();
+    }
+    this.resetApp();
   };
 
   public onURIPaste = async (e: any) => {
@@ -215,20 +241,30 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const {peerMeta} = this.state;
+    const {peerMeta, connected} = this.state;
     return (
       <>
         <div>{this.state.address}</div>
         <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
         <br></br>
-        {peerMeta && peerMeta.name && (
-          <>
-            <p>{peerMeta.name}</p>
-            <p>{peerMeta.description}</p>
-            <button>Approve</button>
-            <button>Rejects</button>
-          </>
-        )}
+        {!connected ? 
+          (peerMeta && peerMeta.name && (
+            <>
+              <p>{peerMeta.name}</p>
+              <p>{peerMeta.description}</p>
+              <button onClick={this.approveSession}>Approve</button>
+              <button>Rejects</button>
+            </>
+          )) : (
+            <>
+              <h6>{"Connected to"}</h6>
+              <img src={peerMeta.icons[0]} alt={peerMeta.name} />
+              <div>{peerMeta.name}</div>
+              <button onClick={this.killSession}>Disconnect</button>
+            </>
+          )
+        }
+        
         <div></div>
       </>
     );
