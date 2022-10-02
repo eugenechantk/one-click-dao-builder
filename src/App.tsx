@@ -19,7 +19,6 @@ export interface IAppState {
   };
   connected: boolean;
   chainId: number;
-  accounts: string[];
   address: string;
   requests: any[];
   results: any[];
@@ -45,7 +44,6 @@ export const INITIAL_STATE: IAppState = {
   connected: false,
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
   // TODO: simplify accounts, address, activeIndex since there is only 1 account
-  accounts: DEFAULT_ACCOUNTS,
   address: DEFAULT_ADDRESS,
   requests: [],
   results: [],
@@ -89,7 +87,6 @@ class App extends React.Component<{}> {
         connected,
         connector,
         address,
-        accounts,
         chainId,
         peerMeta,
       });
