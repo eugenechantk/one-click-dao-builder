@@ -2,7 +2,6 @@ import * as ethers from "ethers";
 import * as ethSigUtil from "eth-sig-util";
 import { getChainData } from "../helpers/utilities";
 import { 
-  DEFAULT_ACTIVE_INDEX,
   DEFAULT_CHAIN_ID
  } from "../constraints/default";
 import { getAppConfig } from "../config";

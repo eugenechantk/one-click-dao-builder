@@ -43,7 +43,6 @@ export const INITIAL_STATE: IAppState = {
   },
   connected: false,
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
-  // TODO: simplify accounts, address, activeIndex since there is only 1 account
   address: DEFAULT_ADDRESS,
   requests: [],
   results: [],
@@ -175,11 +174,49 @@ class App extends React.Component<{}> {
     this.init();
   };
 
+  public initWalletConnect = async () => {
+    const { uri } = this.state;
+
+    this.setState({ loading: true });
+
+    try {
+      const connector = new WalletConnect({ uri });
+
+      if (!connector.connected) {
+        await connector.createSession();
+      }
+
+      await this.setState({
+        loading: false,
+        connector,
+        uri: connector.uri,
+      });
+
+      this.subscribeToEvents();
+    } catch (error) {
+      this.setState({ loading: false });
+
+      throw error;
+    }
+  };
+
+  public onURIPaste = async (e: any) => {
+    const data = e.target.value;
+    const uri = typeof data === "string" ? data : "";
+    if (uri) {
+      await this.setState({ uri });
+      await this.initWalletConnect();
+    }
+  };
+
 
   public render() {
     return (
       <>
-        Hi
+        <div>
+          {this.state.address}
+        </div>
+        <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
       </>
     )
   }
