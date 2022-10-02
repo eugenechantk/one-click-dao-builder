@@ -51,7 +51,7 @@ export const INITIAL_STATE: IAppState = {
 
 class App extends React.Component<{}> {
   public state: IAppState;
-  
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -95,7 +95,8 @@ class App extends React.Component<{}> {
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
-  public bindedSetState = (newState: Partial<IAppState>) => this.setState(newState);
+  public bindedSetState = (newState: Partial<IAppState>) =>
+    this.setState(newState);
 
   public subscribeToEvents = () => {
     console.log("ACTION", "subscribeToEvents");
@@ -113,7 +114,7 @@ class App extends React.Component<{}> {
         this.setState({ peerMeta });
       });
 
-      connector.on("session_update", error => {
+      connector.on("session_update", (error) => {
         console.log("EVENT", "session_update");
 
         if (error) {
@@ -130,7 +131,11 @@ class App extends React.Component<{}> {
           throw error;
         }
 
-        await getAppConfig().rpcEngine.router(payload, this.state, this.bindedSetState);
+        await getAppConfig().rpcEngine.router(
+          payload,
+          this.state,
+          this.bindedSetState
+        );
       });
 
       connector.on("connect", (error, payload) => {
@@ -209,19 +214,25 @@ class App extends React.Component<{}> {
     }
   };
 
-
   public render() {
+    const {peerMeta} = this.state;
     return (
       <>
-        <div>
-          {this.state.address}
-        </div>
+        <div>{this.state.address}</div>
         <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
+        <br></br>
+        {peerMeta && peerMeta.name && (
+          <>
+            <p>{peerMeta.name}</p>
+            <p>{peerMeta.description}</p>
+            <button>Approve</button>
+            <button>Rejects</button>
+          </>
+        )}
+        <div></div>
       </>
-    )
+    );
   }
-
-
 }
 
 export default App;
