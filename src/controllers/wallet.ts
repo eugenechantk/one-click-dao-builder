@@ -8,16 +8,14 @@ import {
 import { getAppConfig } from "../config";
 
 export class WalletController {
-  public path: string;
+  // public path: string;
   // public entropy: string;
   public mnemonic: string;
   public wallet: ethers.Wallet;
-
-  public activeIndex: number = DEFAULT_ACTIVE_INDEX;
   public activeChainId: number = DEFAULT_CHAIN_ID;
 
   constructor() {
-    this.path = this.getPath();
+    // this.path = this.getPath();
     // this.entropy = this.getEntropy();
     this.mnemonic = this.getMnemonic();
     this.wallet = this.init();
@@ -34,13 +32,9 @@ export class WalletController {
     return null;
   }
 
-  public getIndex() {
-    return this.activeIndex;
-  }
-
-  public getWallet(index?: number, chainId?: number): ethers.Wallet {
-    if (!this.wallet || this.activeIndex === index || this.activeChainId === chainId) {
-      return this.init(index, chainId);
+  public getWallet(chainId?: number): ethers.Wallet {
+    if (!this.wallet || this.activeChainId === chainId) {
+      return this.init(chainId);
     }
     return this.wallet;
   }
@@ -49,7 +43,7 @@ export class WalletController {
     const accounts = [];
     let wallet = null;
     for (let i = 0; i < count; i++) {
-      wallet = this.generateWallet(i);
+      wallet = this.generateWallet();
       accounts.push(wallet.address);
     }
     return accounts;
@@ -84,13 +78,14 @@ export class WalletController {
   //   return this.mnemonic;
   // }
 
-  public getPath(index: number = this.activeIndex) {
-    this.path = `${getAppConfig().derivationPath}/${index}`;
-    return this.path;
-  }
+  // HELPER FUNCTION: To generate the derivation path for multiple wallet
+  // public getPath(index: number = this.activeIndex) {
+  //   this.path = `${getAppConfig().derivationPath}/${index}`;
+  //   return this.path;
+  // }
 
-  public generateWallet(index: number) {
-    this.wallet = ethers.Wallet.fromMnemonic(this.getMnemonic(), this.getPath(index));
+  public generateWallet() {
+    this.wallet = ethers.Wallet.fromMnemonic(this.getMnemonic());
     return this.wallet;
   }
 
@@ -107,16 +102,15 @@ export class WalletController {
     return this.mnemonic;
   }
 
-  public init(index = DEFAULT_ACTIVE_INDEX, chainId = DEFAULT_CHAIN_ID): ethers.Wallet {
-    return this.update(index, chainId);
+  public init(chainId = DEFAULT_CHAIN_ID): ethers.Wallet {
+    return this.update(chainId);
   }
 
-  public update(index: number, chainId: number): ethers.Wallet {
+  public update(chainId: number): ethers.Wallet {
     const firstUpdate = typeof this.wallet === "undefined";
-    this.activeIndex = index;
     this.activeChainId = chainId;
     const rpcUrl = getChainData(chainId).rpc_url;
-    const wallet = this.generateWallet(index);
+    const wallet = this.generateWallet();
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     this.wallet = wallet.connect(provider);
     if (!firstUpdate) {

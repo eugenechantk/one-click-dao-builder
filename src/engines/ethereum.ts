@@ -106,14 +106,14 @@ export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
 }
 
 export async function signEthereumRequests(payload: any, state: IAppState, setState: any) {
-  const { connector, address, activeIndex, chainId } = state;
+  const { connector, address, chainId } = state;
 
   let errorMsg = "";
   let result = null;
 
   if (connector) {
     if (!getAppControllers().wallet.isActive()) {
-      await getAppControllers().wallet.init(activeIndex, chainId);
+      await getAppControllers().wallet.init(chainId);
     }
 
     let transaction = null;
