@@ -179,7 +179,7 @@ class App extends React.Component<{}> {
   public render() {
     return (
       <>
-        Hi
+        {DEFAULT_ADDRESS}
       </>
     )
   }
