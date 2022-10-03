@@ -1,29 +1,10 @@
 import * as React from "react";
-import WalletConnect from "@walletconnect/client";
 import { getAppControllers } from "./controllers";
 import { getAppConfig } from "./config";
 import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
-
-export interface IAppState {
-  loading: boolean;
-  scanner: boolean;
-  connector: WalletConnect | null;
-  uri: string;
-  peerMeta: {
-    description: string;
-    url: string;
-    icons: string[];
-    name: string;
-    ssl: boolean;
-  };
-  connected: boolean;
-  chainId: number;
-  address: string;
-  requests: any[];
-  results: any[];
-  payload: any;
-}
+import { IAppState } from "./helpers/types";
+import WalletConnect from "@walletconnect/client";
 
 export const DEFAULT_WALLET = getAppControllers().wallet.getWallet();
 export const DEFAULT_ACCOUNTS = [DEFAULT_WALLET.address];
@@ -67,6 +48,8 @@ class App extends React.Component<{}> {
   public init = async () => {
     let { chainId } = this.state;
 
+    // TODO: Modify how/what we store in localStorage for the cache
+    // NOTE: the connector is stored in localStorage once connected
     const session = getCachedSession();
 
     if (!session) {
@@ -92,13 +75,14 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
+    localStorage.setItem("MNEMONIC",String(process.env.REACT_APP_MNEMONIC));
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
   public bindedSetState = (newState: Partial<IAppState>) =>
     this.setState(newState);
 
-  // NOTES: Subscribing to the different events emitted by the connector
+  // HELPER FUNCTION: call this subscribe function to confirm the type of event emitted by connector
   public subscribeToEvents = () => {
     console.log("ACTION", "subscribeToEvents");
     const { connector } = this.state;
@@ -127,6 +111,7 @@ class App extends React.Component<{}> {
         // tslint:disable-next-line
         console.log("EVENT", "call_request", "method", payload.method);
         console.log("EVENT", "call_request", "params", payload.params);
+        console.log("PAYLOAD", payload);
 
         if (error) {
           throw error;

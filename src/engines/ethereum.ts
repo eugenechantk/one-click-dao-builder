@@ -1,6 +1,6 @@
 import { signingMethods, convertHexToNumber } from "@walletconnect/utils";
 
-import { IAppState } from "../App";
+import { IAppState } from "../helpers/types";
 import { apiGetCustomRequest } from "../helpers/api";
 import { convertHexToUtf8IfPossible } from "../helpers/utilities";
 import { IRequestRenderParams, IRpcEngine } from "../helpers/types";

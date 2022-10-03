@@ -1,5 +1,5 @@
 import { IJsonRpcRequest } from "@walletconnect/types";
-import { IAppState } from "../App";
+import WalletConnect from "@walletconnect/client";
 
 export interface IAssetData {
     symbol: string;
@@ -55,3 +55,23 @@ export interface IAppConfig {
     rpcEngine: IRpcEngine;
     events: IAppEvents;
   }
+
+export interface IAppState {
+    loading: boolean;
+    scanner: boolean;
+    connector: WalletConnect | null;
+    uri: string;
+    peerMeta: {
+        description: string;
+        url: string;
+        icons: string[];
+        name: string;
+        ssl: boolean;
+    };
+    connected: boolean;
+    chainId: number;
+    address: string;
+    requests: any[];
+    results: any[];
+    payload: any;
+}
