@@ -224,6 +224,47 @@ class App extends React.Component<{}> {
     }
   };
 
+  public approveRequest = async () => {
+    const { connector, payload } = this.state;
+
+    try {
+      await getAppConfig().rpcEngine.signer(payload, this.state, this.bindedSetState);
+    } catch (error) {
+      console.error(error);
+      if (connector) {
+        connector.rejectRequest({
+          id: payload.id,
+          error: { message: "Failed or Rejected Request" },
+        });
+      }
+    }
+
+    this.closeRequest();
+    await this.setState({ connector });
+  };
+
+  public rejectRequest = async () => {
+    const { connector, payload } = this.state;
+    if (connector) {
+      connector.rejectRequest({
+        id: payload.id,
+        error: { message: "Failed or Rejected Request" },
+      });
+    }
+    await this.closeRequest();
+    await this.setState({ connector });
+  };
+
+  public closeRequest = async () => {
+    const { requests, payload } = this.state;
+    const filteredRequests = requests.filter(request => request.id !== payload.id);
+    await this.setState({
+      requests: filteredRequests,
+      payload: null,
+    });
+  };
+
+
   public render() {
     const { peerMeta, connected, requests, payload } = this.state;
     
