@@ -5,6 +5,7 @@ import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
 import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
+import { Payload } from "./components/Payload";
 
 export const DEFAULT_WALLET = getAppControllers().wallet.getWallet();
 export const DEFAULT_ACCOUNTS = [DEFAULT_WALLET.address];
@@ -75,7 +76,7 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
-    localStorage.setItem("MNEMONIC",String(process.env.REACT_APP_MNEMONIC));
+    localStorage.setItem("MNEMONIC", String(process.env.REACT_APP_MNEMONIC));
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
@@ -165,7 +166,6 @@ class App extends React.Component<{}> {
     this.init();
   };
 
-
   public initWalletConnect = async () => {
     const { uri } = this.state;
 
@@ -189,7 +189,6 @@ class App extends React.Component<{}> {
 
       // Call the event subscriber to get to know what is the event emitted by connector
       this.subscribeToEvents();
-
     } catch (error) {
       this.setState({ loading: false });
 
@@ -226,45 +225,54 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const {peerMeta, connected, requests, payload} = this.state;
+    const { peerMeta, connected, requests, payload } = this.state;
+    
     return (
       <>
         <div>{this.state.address}</div>
         <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
         <br></br>
-        {!connected ? 
-          (peerMeta && peerMeta.name && (
+        {!connected ? (
+          // View to connect to dApp
+          peerMeta &&
+          peerMeta.name && (
             <>
               <p>{peerMeta.name}</p>
               <p>{peerMeta.description}</p>
               <button onClick={this.approveSession}>Approve</button>
               <button>Rejects</button>
             </>
-          )) : (
-            <>
-              <h6>{"Connected to"}</h6>
-              <img src={peerMeta.icons[0]} alt={peerMeta.name} />
-              <div>{peerMeta.name}</div>
-              <button onClick={this.killSession}>Disconnect</button>
-              {!payload ? (
-                requests.length !== 0 && (
-                  <div>
-                    {requests.map((request,index) => (
-                      <div key={index}>
-                        <p>{request.method}</p>
-                        <button onClick={() => this.setState({payload: request}) }>Sign</button>
-                      </div>
-                    ))}
-                  </div>
-                )
-              ) : (
-                <div>
-                  this is payload
-                </div>
-              )}
-            </>
           )
-        }
+        ) : (
+          <>
+            {/* Show the dApp that is connected */}
+            <h6>{"Connected to"}</h6>
+            <img src={peerMeta.icons[0]} alt={peerMeta.name} />
+            <div>{peerMeta.name}</div>
+            <button onClick={this.killSession}>Disconnect</button>
+            {!payload ? (
+              requests.length !== 0 && (
+                // Show the requests to the connector from connected dApp
+                <div>
+                  {requests.map((request, index) => (
+                    <div key={index}>
+                      <p>{request.method}</p>
+                      <button
+                        onClick={() => {
+                          this.setState({ payload: request });
+                        }}
+                      >
+                        Sign
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <Payload payload={payload}/>
+            )}
+          </>
+        )}
         <div></div>
       </>
     );
