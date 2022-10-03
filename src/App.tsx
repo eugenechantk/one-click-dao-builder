@@ -269,7 +269,10 @@ class App extends React.Component<{}> {
                 </div>
               )
             ) : (
-              <Payload payload={payload}/>
+              <>
+                <hr/>
+                <Payload payload={payload}/>
+              </>
             )}
           </>
         )}
