@@ -226,7 +226,7 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const {peerMeta, connected} = this.state;
+    const {peerMeta, connected, requests, payload} = this.state;
     return (
       <>
         <div>{this.state.address}</div>
@@ -246,10 +246,25 @@ class App extends React.Component<{}> {
               <img src={peerMeta.icons[0]} alt={peerMeta.name} />
               <div>{peerMeta.name}</div>
               <button onClick={this.killSession}>Disconnect</button>
+              {!payload ? (
+                requests.length !== 0 && (
+                  <div>
+                    {requests.map((request,index) => (
+                      <div key={index}>
+                        <p>{request.method}</p>
+                        <button onClick={() => this.setState({payload: request}) }>Sign</button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div>
+                  this is payload
+                </div>
+              )}
             </>
           )
         }
-        
         <div></div>
       </>
     );
