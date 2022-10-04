@@ -27,15 +27,13 @@ export interface IAppEvents {
 
 export interface IRequestRenderParams {
     label: string;
-    // value: string | Promise<any>;
     value: string;
 }
 
 export interface IRpcEngine {
     filter: (payload: IJsonRpcRequest) => boolean;
     router: (payload: IJsonRpcRequest, state: IAppState, setState: any) => Promise<void>;
-    render: (payload: IJsonRpcRequest) => Promise<any>;
-    // render: (payload: IJsonRpcRequest) => IRequestRenderParams[];
+    render: (payload: IJsonRpcRequest) => Promise<IRequestRenderParams[]>;
     signer: (payload: IJsonRpcRequest, state: IAppState, setState: any) => Promise<void>;
 }
 

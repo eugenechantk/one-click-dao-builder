@@ -29,6 +29,7 @@ export class Payload extends React.Component<IPayloadProps, IPayloadStates> {
     this.init();
   }
 
+  // Fetches the formatted object async
   public init = async () => {
     let params;
     const { renderPayload, payload } = this.props;
@@ -42,6 +43,7 @@ export class Payload extends React.Component<IPayloadProps, IPayloadStates> {
     return (
       <>
         {!loading ? (
+          // Render the params of the payload after payload is formatted async
           <div>
             <div>
               {params.map((param) => (
@@ -66,6 +68,7 @@ export class Payload extends React.Component<IPayloadProps, IPayloadStates> {
             </button>
           </div>
         ) : (
+          // Loading state to mount component while it waits for payload to format
           <>Loading transaction info</>
         )}
       </>

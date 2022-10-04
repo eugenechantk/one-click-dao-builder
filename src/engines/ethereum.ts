@@ -47,7 +47,7 @@ export async function routeEthereumRequests(payload: any, state: IAppState, setS
   }
 }
 
-async function getFunctionType(data: string) {
+async function getFunctionType(data: string): Promise<string> {
   const textSig = await axios
     .get(
       `https://www.4byte.directory/api/v1/signatures/?hex_signature=${data.slice(0,9)}`
@@ -58,13 +58,15 @@ async function getFunctionType(data: string) {
     .catch((error) => {
       throw error;
     });
+  // TODO: translate textSig to human-readable names
   return textSig;
 }
 
 // Format the request parameters
-// RETURN IRequestRenderParams: a formatted set of parameters of the request
-export async function renderEthereumRequests(payload: any) {
+// RETURN IRequestRenderParams[]: a formatted set of parameters of the request
+export async function renderEthereumRequests(payload: any): Promise<IRequestRenderParams[]> {
   let params = [{ label: "Method", value: payload.method }];
+  // translate the function hash to text equivalent using an API
   const textSig = await getFunctionType(payload.params[0].data)
 
   switch (payload.method) {
