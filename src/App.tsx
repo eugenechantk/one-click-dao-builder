@@ -26,6 +26,7 @@ export const INITIAL_STATE: IAppState = {
   },
   connected: false,
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
+  // TODO: simplify accounts, address, activeIndex since there is only 1 account
   address: DEFAULT_ADDRESS,
   requests: [],
   results: [],
