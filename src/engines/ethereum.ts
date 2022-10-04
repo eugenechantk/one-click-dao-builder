@@ -5,6 +5,8 @@ import { convertHexToUtf8IfPossible } from "../helpers/utilities";
 import { IRequestRenderParams, IRpcEngine } from "../helpers/types";
 import { getAppControllers } from "../controllers";
 
+// Specify what kind of request method is accepted by this RPC
+// RETURN boolean: whether the request can be served by this RPC
 export function filterEthereumRequests(payload: any) {
   return (
     payload.method.startsWith("eth_") ||
@@ -15,6 +17,8 @@ export function filterEthereumRequests(payload: any) {
   );
 }
 
+// Determine the right RPC method to process the request
+// RETURN none: add the request with the right RPC method to the app state 
 export async function routeEthereumRequests(payload: any, state: IAppState, setState: any) {
   if (!state.connector) {
     return;
@@ -40,6 +44,8 @@ export async function routeEthereumRequests(payload: any, state: IAppState, setS
   }
 }
 
+// Format the request parameters
+// RETURN IRequestRenderParams: a formatted set of parameters of the request
 export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
   let params = [{ label: "Method", value: payload.method }];
 
@@ -104,6 +110,8 @@ export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
   return params;
 }
 
+// Sign the request, using the sign functions (depending on the request method) in the wallet, powered by ethers.js
+// RETURN none
 export async function signEthereumRequests(payload: any, state: IAppState, setState: any) {
   const { connector, address, chainId } = state;
 
@@ -170,6 +178,7 @@ export async function signEthereumRequests(payload: any, state: IAppState, setSt
     }
 
     if (result) {
+      // Approve the request for WalletConnect
       connector.approveRequest({
         id: payload.id,
         result,
@@ -182,6 +191,7 @@ export async function signEthereumRequests(payload: any, state: IAppState, setSt
       if (!getAppControllers().wallet.isActive()) {
         message = "No Active Account";
       }
+      // Reject the request for WalletConnect
       connector.rejectRequest({
         id: payload.id,
         error: { message },

@@ -60,6 +60,7 @@ export interface IAppState {
     loading: boolean;
     scanner: boolean;
     connector: WalletConnect | null;
+    transactionLoading: boolean;
     uri: string;
     peerMeta: {
         description: string;

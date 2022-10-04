@@ -15,6 +15,7 @@ export const INITIAL_STATE: IAppState = {
   loading: false,
   scanner: false,
   connector: null,
+  transactionLoading: false,
   uri: "",
   peerMeta: {
     description: "",
@@ -224,11 +225,32 @@ class App extends React.Component<{}> {
     }
   };
 
+  public openRequest = async (request: any) => {
+    const payload = Object.assign({}, request);
+
+    const params = payload.params[0];
+    if (request.method === "eth_sendTransaction") {
+      payload.params[0] = await getAppControllers().wallet.populateTransaction(params);
+    }
+
+    this.setState({
+      payload,
+    });
+  };
+
+
+  // Approve request from connected dApp using rpcEngine
   public approveRequest = async () => {
     const { connector, payload } = this.state;
 
     try {
-      await getAppConfig().rpcEngine.signer(payload, this.state, this.bindedSetState);
+      this.setState({transactionLoading: true})
+      // Use the signer function of the specific rpcEngine (i.e. ethereum.ts/signEthereumRequests)
+      await getAppConfig().rpcEngine.signer(
+        payload,
+        this.state,
+        this.bindedSetState
+      );
     } catch (error) {
       console.error(error);
       if (connector) {
@@ -257,24 +279,26 @@ class App extends React.Component<{}> {
 
   public closeRequest = async () => {
     const { requests, payload } = this.state;
-    const filteredRequests = requests.filter(request => request.id !== payload.id);
+    this.setState({transactionLoading: false});
+    const filteredRequests = requests.filter(
+      (request) => request.id !== payload.id
+    );
     await this.setState({
       requests: filteredRequests,
       payload: null,
     });
   };
 
-
   public render() {
-    const { peerMeta, connected, requests, payload } = this.state;
-    
+    const { peerMeta, connected, requests, payload, address } = this.state;
+
     return (
       <>
-        <div>{this.state.address}</div>
+        <div>{address}</div>
         <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
         <br></br>
         {!connected ? (
-          // View to connect to dApp
+          // View to approve connection to dApp
           peerMeta &&
           peerMeta.name && (
             <>
@@ -296,12 +320,10 @@ class App extends React.Component<{}> {
                 // Show the requests to the connector from connected dApp
                 <div>
                   {requests.map((request, index) => (
-                    <div key={index}>
+                    <div key={request.id}>
                       <p>{request.method}</p>
                       <button
-                        onClick={() => {
-                          this.setState({ payload: request });
-                        }}
+                        onClick={() => this.openRequest(request)}
                       >
                         Sign
                       </button>
@@ -311,8 +333,13 @@ class App extends React.Component<{}> {
               )
             ) : (
               <>
-                <hr/>
-                <Payload payload={payload}/>
+                <hr />
+                <Payload
+                  payload={payload}
+                  approveRequest={this.approveRequest}
+                  rejectRequest={this.rejectRequest}
+                  state={this.state}
+                />
               </>
             )}
           </>
