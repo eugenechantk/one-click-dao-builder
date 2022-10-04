@@ -109,6 +109,7 @@ export class WalletController {
   public update(chainId: number): ethers.Wallet {
     const firstUpdate = typeof this.wallet === "undefined";
     this.activeChainId = chainId;
+    // fetch the right rpcUrl that is supported by Infura
     const rpcUrl = getChainData(chainId).rpc_url;
     const wallet = this.generateWallet();
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -133,7 +134,15 @@ export class WalletController {
       try {
         tx = await this.wallet.populateTransaction(tx);
         tx.gasLimit = ethers.BigNumber.from(tx.gasLimit).toHexString();
-        tx.gasPrice = ethers.BigNumber.from(tx.gasPrice).toHexString();
+        if (tx.gasPrice) {
+          tx.gasPrice = ethers.BigNumber.from(tx.gasPrice).toHexString();
+        }
+        if (tx.maxFeePerGas) {
+          tx.maxFeePerGas = ethers.BigNumber.from(tx.maxFeePerGas).toHexString();
+        }
+        if (tx.maxPriorityFeePerGas) {
+          tx.maxPriorityFeePerGas = ethers.BigNumber.from(tx.maxPriorityFeePerGas).toHexString();
+        }
         tx.nonce = ethers.BigNumber.from(tx.nonce).toHexString();
       } catch (err) {
         console.error("Error populating transaction", tx, err);

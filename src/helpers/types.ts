@@ -1,5 +1,5 @@
 import { IJsonRpcRequest } from "@walletconnect/types";
-import { IAppState } from "../App";
+import WalletConnect from "@walletconnect/client";
 
 export interface IAssetData {
     symbol: string;
@@ -33,7 +33,7 @@ export interface IRequestRenderParams {
 export interface IRpcEngine {
     filter: (payload: IJsonRpcRequest) => boolean;
     router: (payload: IJsonRpcRequest, state: IAppState, setState: any) => Promise<void>;
-    render: (payload: IJsonRpcRequest) => IRequestRenderParams[];
+    render: (payload: IJsonRpcRequest) => Promise<IRequestRenderParams[]>;
     signer: (payload: IJsonRpcRequest, state: IAppState, setState: any) => Promise<void>;
 }
 
@@ -55,3 +55,24 @@ export interface IAppConfig {
     rpcEngine: IRpcEngine;
     events: IAppEvents;
   }
+
+export interface IAppState {
+    loading: boolean;
+    scanner: boolean;
+    connector: WalletConnect | null;
+    transactionLoading: boolean;
+    uri: string;
+    peerMeta: {
+        description: string;
+        url: string;
+        icons: string[];
+        name: string;
+        ssl: boolean;
+    };
+    connected: boolean;
+    chainId: number;
+    address: string;
+    requests: any[];
+    results: any[];
+    payload: any;
+}

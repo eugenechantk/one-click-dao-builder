@@ -2,6 +2,7 @@ import walletconnectLogo from "./assets/walletconnect-logo.png";
 import { SUPPORTED_CHAINS } from "../constraints/chains";
 import { 
     MAINNET_CHAIN_ID,
+    GOERLI_CHAIN_ID,
     ETH_STANDARD_PATH
  } from "../constraints/default";
 import { IAppConfig } from "../helpers/types";
@@ -10,7 +11,8 @@ import { getRpcEngine } from "../engines";
 const appConfig: IAppConfig = {
   name: "WalletConnect",
   logo: walletconnectLogo,
-  chainId: MAINNET_CHAIN_ID,
+  // Change this to change to testnet
+  chainId: GOERLI_CHAIN_ID,
   derivationPath: ETH_STANDARD_PATH,
   numberOfAccounts: 3,
   colors: {

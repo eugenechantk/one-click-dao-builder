@@ -1,11 +1,15 @@
 import { signingMethods, convertHexToNumber } from "@walletconnect/utils";
-
-import { IAppState } from "../App";
+import { IAppState } from "../helpers/types";
 import { apiGetCustomRequest } from "../helpers/api";
 import { convertHexToUtf8IfPossible } from "../helpers/utilities";
 import { IRequestRenderParams, IRpcEngine } from "../helpers/types";
 import { getAppControllers } from "../controllers";
+import { BigNumber } from "ethers";
+import { formatEther } from "ethers/lib/utils";
+import axios from "axios";
 
+// Specify what kind of request method is accepted by this RPC
+// RETURN boolean: whether the request can be served by this RPC
 export function filterEthereumRequests(payload: any) {
   return (
     payload.method.startsWith("eth_") ||
@@ -16,6 +20,8 @@ export function filterEthereumRequests(payload: any) {
   );
 }
 
+// Determine the right RPC method to process the request
+// RETURN none: add the request with the right RPC method to the app state 
 export async function routeEthereumRequests(payload: any, state: IAppState, setState: any) {
   if (!state.connector) {
     return;
@@ -41,38 +47,77 @@ export async function routeEthereumRequests(payload: any, state: IAppState, setS
   }
 }
 
-export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
+async function getFunctionType(data: string): Promise<string> {
+  const textSig = await axios
+    .get(
+      `https://www.4byte.directory/api/v1/signatures/?hex_signature=${data.slice(0,9)}`
+    )
+    .then((response) => {
+      return response.data.results[0].text_signature;
+    })
+    .catch((error) => {
+      throw error;
+    });
+  // TODO: translate textSig to human-readable names
+  return textSig;
+}
+
+// Format the request parameters
+// RETURN IRequestRenderParams[]: a formatted set of parameters of the request
+export async function renderEthereumRequests(payload: any): Promise<IRequestRenderParams[]> {
   let params = [{ label: "Method", value: payload.method }];
+  // translate the function hash to text equivalent using an API
+  const textSig = await getFunctionType(payload.params[0].data)
 
   switch (payload.method) {
     case "eth_sendTransaction":
     case "eth_signTransaction":
       params = [
         ...params,
+        { label: "textSig", value: textSig},
         { label: "From", value: payload.params[0].from },
         { label: "To", value: payload.params[0].to },
-        {
+        payload.params[0].gasLimit && {
           label: "Gas Limit",
-          value: payload.params[0].gas
-            ? convertHexToNumber(payload.params[0].gas)
-            : payload.params[0].gasLimit
-            ? convertHexToNumber(payload.params[0].gasLimit)
-            : "",
+          value: BigNumber.from(payload.params[0].gasLimit).toString()
         },
-        {
+        payload.params[0].gas && {
+          label: "Gas Limit",
+          value: BigNumber.from(payload.params[0].gas).toString()
+        },
+        payload.params[0].gas && {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].gas).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+        payload.params[0].gasPrice && {
           label: "Gas Price",
-          value: convertHexToNumber(payload.params[0].gasPrice),
+          value: formatEther(BigNumber.from(payload.params[0].gasPrice))
         },
+        payload.params[0].gasPrice && {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].gasPrice).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+        payload.params[0].maxFeePerGas && {
+          label: "Gas Price",
+          value: formatEther(BigNumber.from(payload.params[0].maxFeePerGas))
+        },
+        payload.params[0].maxFeePerGas && 
         {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].maxFeePerGas).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+
+        payload.params[0].nonce && {
           label: "Nonce",
-          value: convertHexToNumber(payload.params[0].nonce),
+          value: BigNumber.from(payload.params[0].nonce).toString()
         },
-        {
+        payload.params[0].value && {
           label: "Value",
-          value: payload.params[0].value ? convertHexToNumber(payload.params[0].value) : "",
+          value: formatEther(BigNumber.from(payload.params[0].value)) || "",
         },
         { label: "Data", value: payload.params[0].data },
       ];
+      params = params.filter(param => param !== undefined)
       break;
 
     case "eth_sign":
@@ -105,6 +150,8 @@ export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
   return params;
 }
 
+// Sign the request, using the sign functions (depending on the request method) in the wallet, powered by ethers.js
+// RETURN none
 export async function signEthereumRequests(payload: any, state: IAppState, setState: any) {
   const { connector, address, chainId } = state;
 
@@ -171,6 +218,7 @@ export async function signEthereumRequests(payload: any, state: IAppState, setSt
     }
 
     if (result) {
+      // Approve the request for WalletConnect
       connector.approveRequest({
         id: payload.id,
         result,
@@ -183,6 +231,7 @@ export async function signEthereumRequests(payload: any, state: IAppState, setSt
       if (!getAppControllers().wallet.isActive()) {
         message = "No Active Account";
       }
+      // Reject the request for WalletConnect
       connector.rejectRequest({
         id: payload.id,
         error: { message },

@@ -1,29 +1,11 @@
 import * as React from "react";
-import WalletConnect from "@walletconnect/client";
 import { getAppControllers } from "./controllers";
 import { getAppConfig } from "./config";
 import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
-
-export interface IAppState {
-  loading: boolean;
-  scanner: boolean;
-  connector: WalletConnect | null;
-  uri: string;
-  peerMeta: {
-    description: string;
-    url: string;
-    icons: string[];
-    name: string;
-    ssl: boolean;
-  };
-  connected: boolean;
-  chainId: number;
-  address: string;
-  requests: any[];
-  results: any[];
-  payload: any;
-}
+import { IAppState } from "./helpers/types";
+import WalletConnect from "@walletconnect/client";
+import { Payload } from "./components/Payload";
 
 export const DEFAULT_WALLET = getAppControllers().wallet.getWallet();
 export const DEFAULT_ACCOUNTS = [DEFAULT_WALLET.address];
@@ -33,6 +15,7 @@ export const INITIAL_STATE: IAppState = {
   loading: false,
   scanner: false,
   connector: null,
+  transactionLoading: false,
   uri: "",
   peerMeta: {
     description: "",
@@ -52,7 +35,7 @@ export const INITIAL_STATE: IAppState = {
 
 class App extends React.Component<{}> {
   public state: IAppState;
-  
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -68,6 +51,8 @@ class App extends React.Component<{}> {
   public init = async () => {
     let { chainId } = this.state;
 
+    // TODO: Modify how/what we store in localStorage for the cache
+    // NOTE: the connector is stored in localStorage once connected
     const session = getCachedSession();
 
     if (!session) {
@@ -93,11 +78,14 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
+    localStorage.setItem("MNEMONIC", String(process.env.REACT_APP_MNEMONIC));
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
-  public bindedSetState = (newState: Partial<IAppState>) => this.setState(newState);
+  public bindedSetState = (newState: Partial<IAppState>) =>
+    this.setState(newState);
 
+  // HELPER FUNCTION: call this subscribe function to confirm the type of event emitted by connector
   public subscribeToEvents = () => {
     console.log("ACTION", "subscribeToEvents");
     const { connector } = this.state;
@@ -114,7 +102,7 @@ class App extends React.Component<{}> {
         this.setState({ peerMeta });
       });
 
-      connector.on("session_update", error => {
+      connector.on("session_update", (error) => {
         console.log("EVENT", "session_update");
 
         if (error) {
@@ -126,12 +114,17 @@ class App extends React.Component<{}> {
         // tslint:disable-next-line
         console.log("EVENT", "call_request", "method", payload.method);
         console.log("EVENT", "call_request", "params", payload.params);
+        console.log("PAYLOAD", payload);
 
         if (error) {
           throw error;
         }
 
-        await getAppConfig().rpcEngine.router(payload, this.state, this.bindedSetState);
+        await getAppConfig().rpcEngine.router(
+          payload,
+          this.state,
+          this.bindedSetState
+        );
       });
 
       connector.on("connect", (error, payload) => {
@@ -175,16 +168,188 @@ class App extends React.Component<{}> {
     this.init();
   };
 
+  public initWalletConnect = async () => {
+    const { uri } = this.state;
+
+    this.setState({ loading: true });
+
+    try {
+      // Instantiate a new WalletConnect connector to connect to dapps
+      const connector = new WalletConnect({ uri });
+
+      if (!connector.connected) {
+        // Create a new session with the WalletConnect connector
+        await connector.createSession();
+      }
+
+      // Store the connector to the specific dapp in the states
+      await this.setState({
+        loading: false,
+        connector,
+        uri: connector.uri,
+      });
+
+      // Call the event subscriber to get to know what is the event emitted by connector
+      this.subscribeToEvents();
+    } catch (error) {
+      this.setState({ loading: false });
+
+      throw error;
+    }
+  };
+
+  public approveSession = () => {
+    console.log("ACTION", "approveSession");
+    const { connector, chainId, address } = this.state;
+    if (connector) {
+      // Approve the session connected by this state's connector
+      connector.approveSession({ chainId, accounts: [address] });
+    }
+    this.setState({ connector });
+  };
+
+  public killSession = () => {
+    console.log("ACTION", "killSession");
+    const { connector } = this.state;
+    if (connector) {
+      connector.killSession();
+    }
+    this.resetApp();
+  };
+
+  public onURIPaste = async (e: any) => {
+    const data = e.target.value;
+    const uri = typeof data === "string" ? data : "";
+    if (uri) {
+      await this.setState({ uri });
+      await this.initWalletConnect();
+    }
+  };
+
+  public openRequest = async (request: any) => {
+    const payload = Object.assign({}, request);
+
+    const params = payload.params[0];
+    if (request.method === "eth_sendTransaction") {
+      payload.params[0] = await getAppControllers().wallet.populateTransaction(params);
+    }
+
+    this.setState({
+      payload,
+    });
+  };
+
+
+  // Approve request from connected dApp using rpcEngine
+  public approveRequest = async () => {
+    const { connector, payload } = this.state;
+
+    try {
+      this.setState({transactionLoading: true})
+      // Use the signer function of the specific rpcEngine (i.e. ethereum.ts/signEthereumRequests)
+      await getAppConfig().rpcEngine.signer(
+        payload,
+        this.state,
+        this.bindedSetState
+      );
+    } catch (error) {
+      console.error(error);
+      if (connector) {
+        connector.rejectRequest({
+          id: payload.id,
+          error: { message: "Failed or Rejected Request" },
+        });
+      }
+    }
+
+    this.closeRequest();
+    await this.setState({ connector });
+  };
+
+  public rejectRequest = async () => {
+    const { connector, payload } = this.state;
+    if (connector) {
+      connector.rejectRequest({
+        id: payload.id,
+        error: { message: "Failed or Rejected Request" },
+      });
+    }
+    await this.closeRequest();
+    await this.setState({ connector });
+  };
+
+  public closeRequest = async () => {
+    const { requests, payload } = this.state;
+    this.setState({transactionLoading: false});
+    const filteredRequests = requests.filter(
+      (request) => request.id !== payload.id
+    );
+    await this.setState({
+      requests: filteredRequests,
+      payload: null,
+    });
+  };
 
   public render() {
+    const { peerMeta, connected, requests, payload, address } = this.state;
+
     return (
       <>
-        {DEFAULT_ADDRESS}
+        <div>{address}</div>
+        <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
+        <br></br>
+        {!connected ? (
+          // View to approve connection to dApp
+          peerMeta &&
+          peerMeta.name && (
+            <>
+              <p>{peerMeta.name}</p>
+              <p>{peerMeta.description}</p>
+              <button onClick={this.approveSession}>Approve</button>
+              <button>Rejects</button>
+            </>
+          )
+        ) : (
+          <>
+            {/* Show the dApp that is connected */}
+            <h6>{"Connected to"}</h6>
+            <img src={peerMeta.icons[0]} alt={peerMeta.name} />
+            <div>{peerMeta.name}</div>
+            <button onClick={this.killSession}>Disconnect</button>
+            {!payload ? (
+              requests.length !== 0 && (
+                // Show the requests to the connector from connected dApp
+                <div>
+                  {requests.map((request, index) => (
+                    <div key={request.id}>
+                      <p>{request.method}</p>
+                      <button
+                        onClick={() => this.openRequest(request)}
+                      >
+                        Sign
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <>
+                <hr />
+                <Payload
+                  payload={payload}
+                  approveRequest={this.approveRequest}
+                  rejectRequest={this.rejectRequest}
+                  renderPayload={(payload: any) => getAppConfig().rpcEngine.render(payload)}
+                  appState={this.state}
+                />
+              </>
+            )}
+          </>
+        )}
+        <div></div>
       </>
-    )
+    );
   }
-
-
 }
 
 export default App;
