@@ -338,6 +338,7 @@ class App extends React.Component<{}> {
                   payload={payload}
                   approveRequest={this.approveRequest}
                   rejectRequest={this.rejectRequest}
+                  renderPayload={(payload: any) => getAppConfig().rpcEngine.render(payload)}
                   state={this.state}
                 />
               </>

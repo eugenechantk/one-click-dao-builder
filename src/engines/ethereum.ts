@@ -4,6 +4,9 @@ import { apiGetCustomRequest } from "../helpers/api";
 import { convertHexToUtf8IfPossible } from "../helpers/utilities";
 import { IRequestRenderParams, IRpcEngine } from "../helpers/types";
 import { getAppControllers } from "../controllers";
+import { BigNumber } from "ethers";
+import { formatEther } from "ethers/lib/utils";
+import axios from "axios";
 
 // Specify what kind of request method is accepted by this RPC
 // RETURN boolean: whether the request can be served by this RPC
@@ -44,6 +47,20 @@ export async function routeEthereumRequests(payload: any, state: IAppState, setS
   }
 }
 
+async function getFunctionType(data: string) {
+  const textSig = await axios
+    .get(
+      `https://www.4byte.directory/api/v1/signatures/?hex_signature=${data.slice(0,9)}`
+    )
+    .then((response) => {
+      return response.data.results[0].text_signature;
+    })
+    .catch((error) => {
+      throw error;
+    });
+  return textSig;
+}
+
 // Format the request parameters
 // RETURN IRequestRenderParams: a formatted set of parameters of the request
 export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
@@ -54,30 +71,50 @@ export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
     case "eth_signTransaction":
       params = [
         ...params,
+        { label: "Method", value: getFunctionType(payload.params[0].data)},
         { label: "From", value: payload.params[0].from },
         { label: "To", value: payload.params[0].to },
-        {
+        payload.params[0].gasLimit && {
           label: "Gas Limit",
-          value: payload.params[0].gas
-            ? convertHexToNumber(payload.params[0].gas)
-            : payload.params[0].gasLimit
-            ? convertHexToNumber(payload.params[0].gasLimit)
-            : "",
+          value: BigNumber.from(payload.params[0].gasLimit).toString()
         },
-        {
+        payload.params[0].gas && {
+          label: "Gas Limit",
+          value: BigNumber.from(payload.params[0].gas).toString()
+        },
+        payload.params[0].gas && {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].gas).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+        payload.params[0].gasPrice && {
           label: "Gas Price",
-          value: convertHexToNumber(payload.params[0].gasPrice),
+          value: formatEther(BigNumber.from(payload.params[0].gasPrice))
         },
+        payload.params[0].gasPrice && {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].gasPrice).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+        payload.params[0].maxFeePerGas && {
+          label: "Gas Price",
+          value: formatEther(BigNumber.from(payload.params[0].maxFeePerGas))
+        },
+        payload.params[0].maxFeePerGas && 
         {
+          label: "Transaction Fee",
+          value: formatEther(BigNumber.from(payload.params[0].maxFeePerGas).mul(BigNumber.from(payload.params[0].gasLimit)))
+        },
+
+        payload.params[0].nonce && {
           label: "Nonce",
-          value: convertHexToNumber(payload.params[0].nonce),
+          value: BigNumber.from(payload.params[0].nonce).toString()
         },
-        {
+        payload.params[0].value && {
           label: "Value",
-          value: payload.params[0].value ? convertHexToNumber(payload.params[0].value) : "",
+          value: formatEther(BigNumber.from(payload.params[0].value)) || "",
         },
         { label: "Data", value: payload.params[0].data },
       ];
+      params = params.filter(param => param !== undefined)
       break;
 
     case "eth_sign":

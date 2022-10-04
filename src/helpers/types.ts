@@ -27,7 +27,7 @@ export interface IAppEvents {
 
 export interface IRequestRenderParams {
     label: string;
-    value: string;
+    value: string | Promise<any>;
 }
 
 export interface IRpcEngine {

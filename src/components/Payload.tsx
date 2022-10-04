@@ -1,21 +1,24 @@
-import { convertHexToNumber } from "@walletconnect/utils";
-import { formatEther } from "ethers/lib/utils";
-import axios from "axios";
 import { useState, useEffect } from "react";
 import { IAppState } from "../helpers/types";
-import { BigNumber } from "ethers";
+import { IRequestRenderParams } from "../helpers/types";
+import axios from "axios";
 
 export interface IPayloadProps {
   payload: any;
   approveRequest: () => Promise<void>;
   rejectRequest: () => Promise<void>;
+  renderPayload: (payload: any) => IRequestRenderParams[];
   state: IAppState;
 }
 
 export const Payload = (props: IPayloadProps) => {
   const [textSig, setTextSig] = useState("");
-  const { payload, approveRequest, rejectRequest, state } = props;
+  const { payload, approveRequest, rejectRequest, state, renderPayload } =
+    props;
   console.log(payload);
+
+  const params: IRequestRenderParams[] = renderPayload(payload);
+  console.log(params);
 
   useEffect(() => {
     // HELPER FUNCTION: get the text equivalent of the transaction function used
@@ -37,12 +40,18 @@ export const Payload = (props: IPayloadProps) => {
     }
     getFunctionType();
   }, [payload.params]);
-
+  
   return (
     <div>
       <div>{payload.method}</div>
       <div>{`Function: ${textSig}`}</div>
-      <div>
+      {params.map((param) => (
+        <div key={param.label}>
+          <h4>{param.label}</h4>
+          <p>{param.value}</p>
+        </div>
+      ))}
+      {/* <div>
         {`Value: ${formatEther(BigNumber.from(payload.params[0].value))}`}
       </div>
       <div>
@@ -60,7 +69,7 @@ export const Payload = (props: IPayloadProps) => {
               )
         }`}
       </div>
-      <div>{`To: ${payload.params[0].to}`}</div>
+      <div>{`To: ${payload.params[0].to}`}</div> */}
       <br></br>
       <button onClick={approveRequest} disabled={state.transactionLoading}>
         Approve
