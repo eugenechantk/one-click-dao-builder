@@ -63,15 +63,16 @@ async function getFunctionType(data: string) {
 
 // Format the request parameters
 // RETURN IRequestRenderParams: a formatted set of parameters of the request
-export function renderEthereumRequests(payload: any): IRequestRenderParams[] {
+export async function renderEthereumRequests(payload: any) {
   let params = [{ label: "Method", value: payload.method }];
+  const textSig = await getFunctionType(payload.params[0].data)
 
   switch (payload.method) {
     case "eth_sendTransaction":
     case "eth_signTransaction":
       params = [
         ...params,
-        { label: "Method", value: getFunctionType(payload.params[0].data)},
+        { label: "textSig", value: textSig},
         { label: "From", value: payload.params[0].from },
         { label: "To", value: payload.params[0].to },
         payload.params[0].gasLimit && {
