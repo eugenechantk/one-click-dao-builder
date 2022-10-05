@@ -1,8 +1,7 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
-import ethers from "ethers";
 import { getAppControllers } from ".";
 
-const sdk = new ThirdwebSDK(getAppControllers().wallet.getWallet());
+export const sdk = new ThirdwebSDK(getAppControllers().wallet.getWallet());
 
 export async function getSdkAddress() {
     try {
