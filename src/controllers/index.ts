@@ -1,4 +1,5 @@
 import { WalletController, getWalletController } from "./wallet";
+import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 
 interface IAppControllers {
   wallet: WalletController;

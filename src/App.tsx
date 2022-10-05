@@ -6,7 +6,7 @@ import { getCachedSession } from "./helpers/utilities";
 import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
-import { TokenMinting } from "./components/token";
+import { TokenMinting } from "./components/TokenMinting";
 
 export const INITIAL_STATE: IAppState = {
   loading: false,
@@ -25,7 +25,7 @@ export const INITIAL_STATE: IAppState = {
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
   // TODO: simplify accounts, address, activeIndex since there is only 1 account
   // address: DEFAULT_ADDRESS,
-  address: "",
+  address: getAppControllers().wallet.getWallet().address || "",
   requests: [],
   results: [],
   payload: null,
@@ -291,7 +291,6 @@ class App extends React.Component<{}> {
 
   public render() {
     const { peerMeta, connected, requests, payload, address } = this.state;
-    console.log(getAppControllers().wallet.getWallet().privateKey);
     return (
       <>
         <div>{address}</div>
