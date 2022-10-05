@@ -47,6 +47,8 @@ export class ThirdWebController {
     }
     return contractAddress;
   }
+
+  
 }
 
 export function getThirdWebController(wallet: ethers.Wallet) {

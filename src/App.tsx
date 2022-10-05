@@ -7,6 +7,8 @@ import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
 import { TokenMinting } from "./components/TokenMinting";
 import { ThirdWebController } from "./controllers/thirdweb";
+import { ConnectWallet, useAddress } from "@thirdweb-dev/react";
+import { UserWallet } from "./components/UserWallet";
 export interface IAppState {
   loading: boolean;
   scanner: boolean;
@@ -313,24 +315,34 @@ class App extends React.Component<{}> {
     const { peerMeta, connected, requests, payload, address } = this.state;
     return (
       <>
+        <h4>User's wallet</h4>
+        <ConnectWallet/>
+        <UserWallet />
+        <></>
+        <hr/>
+        <h4>Club wallet</h4>
         <div>{address}</div>
-        <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
         <br></br>
         {!connected ? (
-          // View to approve connection to dApp
-          peerMeta &&
-          peerMeta.name && (
-            <>
-              <p>{peerMeta.name}</p>
-              <p>{peerMeta.description}</p>
-              <button onClick={this.approveSession}>Approve</button>
-              <button>Rejects</button>
-            </>
-          )
+          <>
+            <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
+            {
+              // View to approve connection to dApp
+              peerMeta &&
+              peerMeta.name && (
+                <>
+                  <p>{peerMeta.name}</p>
+                  <p>{peerMeta.description}</p>
+                  <button onClick={this.approveSession}>Approve</button>
+                  <button>Rejects</button>
+                </>
+              )
+            }
+          </>
         ) : (
           <>
             {/* Show the dApp that is connected */}
-            <h6>{"Connected to"}</h6>
+            <h5>{"Connected to"}</h5>
             <img src={peerMeta.icons[0]} alt={peerMeta.name} />
             <div>{peerMeta.name}</div>
             <button onClick={this.killSession}>Disconnect</button>
@@ -364,7 +376,8 @@ class App extends React.Component<{}> {
             )}
           </>
         )}
-        <br></br>
+        <hr/>
+        <h4>Club tokens</h4>
         <TokenMinting />
         <div></div>
       </>
