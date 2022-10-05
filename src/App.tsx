@@ -6,7 +6,6 @@ import { getCachedSession } from "./helpers/utilities";
 import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
-import { TokenMinting } from "./components/token";
 
 export const INITIAL_STATE: IAppState = {
   loading: false,
@@ -345,8 +344,6 @@ class App extends React.Component<{}> {
             )}
           </>
         )}
-        <br></br>
-        <TokenMinting />
         <div></div>
       </>
     );
