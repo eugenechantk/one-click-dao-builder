@@ -28,6 +28,7 @@ export interface IAppState {
   requests: any[];
   results: any[];
   payload: any;
+  userAddress: string;
 }
 
 export const INITIAL_STATE: IAppState = {
@@ -51,6 +52,7 @@ export const INITIAL_STATE: IAppState = {
   requests: [],
   results: [],
   payload: null,
+  userAddress: "",
 };
 
 class App extends React.Component<{}> {
@@ -317,7 +319,7 @@ class App extends React.Component<{}> {
       <>
         <h4>User's wallet</h4>
         <ConnectWallet/>
-        <UserWallet />
+        <UserWallet setUserAddress={(userAddress) => this.setState({userAddress})}/>
         <></>
         <hr/>
         <h4>Club wallet</h4>
