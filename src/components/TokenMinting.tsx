@@ -3,11 +3,11 @@ import React from "react";
 import { ThirdWebController } from "../controllers/thirdweb";
 
 export interface ITokenMintingStates {
-  sdkController: ThirdWebController;
+  sdkController: ThirdWebController | any;
 }
 
 export const INITIAL_STATE = {
-  sdkController: new ThirdWebController(),
+  sdkController: ""
 };
 export class TokenMinting extends React.Component {
   public state: ITokenMintingStates;

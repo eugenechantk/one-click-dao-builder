@@ -197,8 +197,8 @@ export function verifyFields(params: any[], keys: any[]) {
   return;
 }
 
-export function getCachedSession(): any {
-  const local = localStorage ? localStorage.getItem("walletconnect") : null;
+export function getCachedSession(key: string): any {
+  const local = localStorage ? localStorage.getItem(key) : null;
 
   let session = null;
   if (local) {

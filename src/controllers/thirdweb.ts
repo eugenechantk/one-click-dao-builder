@@ -1,18 +1,20 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { ethers } from "ethers";
 import { getAppControllers } from ".";
 
 export class ThirdWebController {
-  sdk: ThirdwebSDK;
-  dropTokenAddress: string;
+  public sdk: ThirdwebSDK;
+  public dropTokenAddress: string;
 
-  constructor(){
-    this.sdk = this.init();
+  constructor(wallet: ethers.Wallet){
+    this.sdk = this.init(wallet);
     this.dropTokenAddress = "";
   }
 
-  public init(): ThirdwebSDK {
+  public init(wallet: ethers.Wallet): ThirdwebSDK {
     if (!this.sdk) {
-       return new ThirdwebSDK(getAppControllers().wallet.getWallet());
+       const sdk = new ThirdwebSDK(wallet);
+       this.sdk = sdk
     }
     return this.sdk
   }
@@ -44,4 +46,8 @@ export class ThirdWebController {
       console.error("failed to deploy token module", error);
     }
   }
+}
+
+export function getThirdWebController(wallet: ethers.Wallet) {
+  return new ThirdWebController(wallet);
 }

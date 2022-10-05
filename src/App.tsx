@@ -51,13 +51,14 @@ class App extends React.Component<{}> {
 
     // TODO: Modify how/what we store in localStorage for the cache
     // NOTE: the connector is stored in localStorage once connected
-    const session = getCachedSession();
+    const wcSession = getCachedSession('walletconnect');
+    const thirdWebSession = getCachedSession('thirdweb');
 
-    if (!session) {
+    if (!wcSession) {
       await getAppControllers().wallet.init(chainId);
       this.setState ({ address: getAppControllers().wallet.getWallet().address })
     } else {
-      const connector = new WalletConnect({ session });
+      const connector = new WalletConnect({ session: wcSession });
 
       const { connected, accounts, peerMeta } = connector;
 
@@ -77,7 +78,8 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
-    localStorage.setItem("MNEMONIC", String(process.env.REACT_APP_MNEMONIC));
+    console.log(getAppControllers().thirdweb.sdk);
+    
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
@@ -345,7 +347,7 @@ class App extends React.Component<{}> {
           </>
         )}
         <br></br>
-        <TokenMinting />
+        {/* <TokenMinting /> */}
         <div></div>
       </>
     );
