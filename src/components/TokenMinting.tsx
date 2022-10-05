@@ -2,17 +2,21 @@ import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import React from "react";
 import { getAppControllers } from "../controllers";
 import { ThirdWebController } from "../controllers/thirdweb";
+import { getLocal } from "../helpers/local";
 
 export interface ITokenMintingStates {
   sdkController: ThirdWebController;
   sdk: ThirdwebSDK;
   dropTokenAddress: string;
+  deployContractLoading: boolean;
 }
 
 export const INITIAL_STATE = {
   sdkController: getAppControllers().thirdweb,
   sdk: getAppControllers().thirdweb.sdk,
-  dropTokenAddress: "",
+  // TODO: remove drop token address from localStorage and fetch it from database
+  dropTokenAddress: getLocal('club_token_address') ? getLocal('club_token_address') : '',
+  deployContractLoading: false,
 };
 export class TokenMinting extends React.Component {
   public state: ITokenMintingStates;
@@ -34,13 +38,14 @@ export class TokenMinting extends React.Component {
 
   public async deployClubTokenContract(name_input: string, symbol_input: string) {
     const { sdkController } = this.state;
+    this.setState({deployContractLoading: true})
     const dropTokenAddress = await sdkController.getClubTokenAddress(name_input, symbol_input);
-    this.setState({dropTokenAddress});
+    this.setState({dropTokenAddress, deployContractLoading: false});
   }
 
   render() {
     let name_input: string, symbol_input: string;
-    const { sdkController, dropTokenAddress} = this.state;
+    const { dropTokenAddress, deployContractLoading} = this.state;
     return (
       <>
         {!dropTokenAddress ? (
@@ -68,6 +73,7 @@ export class TokenMinting extends React.Component {
               onClick={() =>
                 this.deployClubTokenContract(name_input,symbol_input)
               }
+              disabled={deployContractLoading}
             >
               Mint drop token
             </button>

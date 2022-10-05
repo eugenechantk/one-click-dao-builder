@@ -1,7 +1,7 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { ethers } from "ethers";
 import { getAppControllers } from ".";
-import { local } from "../helpers/local";
+import { local, setLocal } from "../helpers/local";
 
 export class ThirdWebController {
   public sdk: ThirdwebSDK;
@@ -41,6 +41,7 @@ export class ThirdWebController {
         "✅ Successfully deployed token module, address:",
         contractAddress,
       );
+      setLocal('club_token_address',contractAddress);
     } catch (error) {
       console.error("failed to deploy token module", error);
     }
