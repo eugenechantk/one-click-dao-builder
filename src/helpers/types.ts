@@ -1,5 +1,6 @@
 import { IJsonRpcRequest } from "@walletconnect/types";
 import WalletConnect from "@walletconnect/client";
+import { ethers } from "ethers";
 
 export interface IAssetData {
     symbol: string;

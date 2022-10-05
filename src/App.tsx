@@ -7,10 +7,6 @@ import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
 
-export const DEFAULT_WALLET = getAppControllers().wallet.getWallet();
-export const DEFAULT_ACCOUNTS = [DEFAULT_WALLET.address];
-export const DEFAULT_ADDRESS = DEFAULT_ACCOUNTS[DEFAULT_ACTIVE_INDEX];
-
 export const INITIAL_STATE: IAppState = {
   loading: false,
   scanner: false,
@@ -27,7 +23,8 @@ export const INITIAL_STATE: IAppState = {
   connected: false,
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
   // TODO: simplify accounts, address, activeIndex since there is only 1 account
-  address: DEFAULT_ADDRESS,
+  // address: DEFAULT_ADDRESS,
+  address: "",
   requests: [],
   results: [],
   payload: null,
@@ -57,6 +54,7 @@ class App extends React.Component<{}> {
 
     if (!session) {
       await getAppControllers().wallet.init(chainId);
+      this.setState ({ address: getAppControllers().wallet.getWallet().address })
     } else {
       const connector = new WalletConnect({ session });
 
@@ -292,7 +290,7 @@ class App extends React.Component<{}> {
 
   public render() {
     const { peerMeta, connected, requests, payload, address } = this.state;
-
+    console.log(getAppControllers().wallet.getWallet().privateKey);
     return (
       <>
         <div>{address}</div>
