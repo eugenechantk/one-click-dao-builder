@@ -3,10 +3,30 @@ import { getAppControllers } from "./controllers";
 import { getAppConfig } from "./config";
 import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
-import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
 import { TokenMinting } from "./components/TokenMinting";
+import { ThirdWebController } from "./controllers/thirdweb";
+export interface IAppState {
+  loading: boolean;
+  scanner: boolean;
+  connector: WalletConnect | null;
+  transactionLoading: boolean;
+  uri: string;
+  peerMeta: {
+      description: string;
+      url: string;
+      icons: string[];
+      name: string;
+      ssl: boolean;
+  };
+  connected: boolean;
+  chainId: number;
+  address: string;
+  requests: any[];
+  results: any[];
+  payload: any;
+}
 
 export const INITIAL_STATE: IAppState = {
   loading: false,
@@ -52,7 +72,6 @@ class App extends React.Component<{}> {
     // TODO: Modify how/what we store in localStorage for the cache
     // NOTE: the connector is stored in localStorage once connected
     const wcSession = getCachedSession('walletconnect');
-    const thirdWebSession = getCachedSession('thirdweb');
 
     if (!wcSession) {
       await getAppControllers().wallet.init(chainId);
@@ -78,7 +97,6 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
-    console.log(getAppControllers().thirdweb.sdk);
     
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
@@ -347,7 +365,7 @@ class App extends React.Component<{}> {
           </>
         )}
         <br></br>
-        {/* <TokenMinting /> */}
+        <TokenMinting />
         <div></div>
       </>
     );

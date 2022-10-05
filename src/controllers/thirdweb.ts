@@ -1,14 +1,13 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { ethers } from "ethers";
 import { getAppControllers } from ".";
+import { local } from "../helpers/local";
 
 export class ThirdWebController {
   public sdk: ThirdwebSDK;
-  public dropTokenAddress: string;
 
   constructor(wallet: ethers.Wallet){
     this.sdk = this.init(wallet);
-    this.dropTokenAddress = "";
   }
 
   public init(wallet: ethers.Wallet): ThirdwebSDK {
@@ -30,14 +29,14 @@ export class ThirdWebController {
 
   // Deploy the drop token contract with the name and symbol as params
   // RETURN none: it will set the dropTokenAddress var as the deployed contract address
-  public async getClubTokenAddress(name_input: string, symbol_input:string, primary_sale_recipient_input?:string): Promise<void> {
+  public async getClubTokenAddress(name_input: string, symbol_input:string, primary_sale_recipient_input?:string) : Promise<string> {
+    let contractAddress = '';
     try {
-      const contractAddress = await this.sdk.deployer.deployTokenDrop({
+      contractAddress = await this.sdk.deployer.deployTokenDrop({
         name: name_input,
         symbol: symbol_input,
         primary_sale_recipient: getAppControllers().wallet.getWallet().address,
       });
-      this.dropTokenAddress = contractAddress;
       console.log(
         "✅ Successfully deployed token module, address:",
         contractAddress,
@@ -45,6 +44,7 @@ export class ThirdWebController {
     } catch (error) {
       console.error("failed to deploy token module", error);
     }
+    return contractAddress;
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { IAppState } from "../helpers/types";
+import { IAppState } from "../App";
 import { IRequestRenderParams } from "../helpers/types";
 import axios from "axios";
 
