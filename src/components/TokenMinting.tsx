@@ -44,7 +44,7 @@ export class TokenMinting extends React.Component {
   }
 
   render() {
-    let name_input: string, symbol_input: string;
+    let name_input: string, symbol_input: string, amountToClaim: string;
     const { dropTokenAddress, deployContractLoading} = this.state;
     return (
       <>
@@ -79,7 +79,16 @@ export class TokenMinting extends React.Component {
             </button>
           </>
         ) : (
-          <>Token minted! Contract address: {dropTokenAddress}</>
+          <>
+            <>Token minted! Contract address: {dropTokenAddress}</>
+            <br></br>
+            <br></br>
+            <div>
+              <input placeholder='Enter amount to claim' onChange={(e) => (amountToClaim = e.target.value)}/>
+              <button onClick={() => getAppControllers().thirdweb.claimClubToken(amountToClaim)}>Claim club tokens</button>
+            </div>
+          </>
+          
         )}
       </>
     );
