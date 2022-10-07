@@ -1,4 +1,4 @@
-import { ClaimConditionInput, ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { ClaimConditionInput, ThirdwebSDK, TransactionResult } from "@thirdweb-dev/sdk";
 import { ethers } from "ethers";
 import { getAppControllers } from ".";
 import { local, setLocal } from "../helpers/local";
@@ -10,7 +10,7 @@ export class ThirdWebController {
 
   constructor(wallet: ethers.Wallet){
     this.sdk = this.init(wallet);
-    this.clubTokenAddress = "";
+    this.clubTokenAddress = localStorage.getItem("club_token_address") || "";
     this.claimCondition = [{}];
   }
 
@@ -63,7 +63,6 @@ export class ThirdWebController {
       } catch (error) {
         console.log(`Error in setting claim condition: `, error);
       }
-      
     }
     return this.clubTokenAddress;
   }
@@ -71,14 +70,16 @@ export class ThirdWebController {
   // Setting the claim condition, inc. start date, price, which cryptocurrency to charge
   // ARG - condition: ClaimConditionInput[] -- the claim condition with various parameters to set the start date, price, maxQuantity, currency to claim, etc.
   public async setClaimCondition (condition: ClaimConditionInput[]): Promise<void> {
-    const clubTokenContract = await this.sdk.getTokenDrop(this.clubTokenAddress);
-    clubTokenContract.claimConditions.set(condition);
+    console.log(this.clubTokenAddress);
+    const clubTokenContract = await this.sdk.getTokenDrop(this.clubTokenAddress.replace(/['"]+/g, ''));
+    const transactionResult = await clubTokenContract.claimConditions.set(condition);
     this.claimCondition = condition;
+    console.log(transactionResult)
   }
 
   public async claimClubToken(amountToClaim:string) {
-    const clubTokenContract = getAppControllers().thirdweb.sdk.getTokenDrop(this.clubTokenAddress)
-    const claimResult = (await clubTokenContract).claim(amountToClaim)
+    const clubTokenContract = await getAppControllers().thirdweb.sdk.getTokenDrop(this.clubTokenAddress.replace(/['"]+/g, ''))
+    const claimResult = await clubTokenContract.claim(amountToClaim);
     console.log(`✅ Successfully claimed ${amountToClaim} tokens. Result:`,claimResult);
   }
 }

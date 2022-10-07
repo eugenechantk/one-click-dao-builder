@@ -15,7 +15,9 @@ export const INITIAL_STATE = {
   sdkController: getAppControllers().thirdweb,
   sdk: getAppControllers().thirdweb.sdk,
   // TODO: remove drop token address from localStorage and fetch it from database
-  dropTokenAddress: getLocal('club_token_address') ? getLocal('club_token_address') : '',
+  dropTokenAddress: getLocal("club_token_address")
+    ? getLocal("club_token_address")
+    : "",
   deployContractLoading: false,
 };
 export class TokenMinting extends React.Component {
@@ -36,16 +38,22 @@ export class TokenMinting extends React.Component {
     sdkController.getSdkAddress();
   }
 
-  public async deployClubTokenContract(name_input: string, symbol_input: string) {
+  public async deployClubTokenContract(
+    name_input: string,
+    symbol_input: string
+  ) {
     const { sdkController } = this.state;
-    this.setState({deployContractLoading: true})
-    const dropTokenAddress = await sdkController.getClubTokenAddress(name_input, symbol_input);
-    this.setState({dropTokenAddress, deployContractLoading: false});
+    this.setState({ deployContractLoading: true });
+    const dropTokenAddress = await sdkController.getClubTokenAddress(
+      name_input,
+      symbol_input
+    );
+    this.setState({ dropTokenAddress, deployContractLoading: false });
   }
 
   render() {
     let name_input: string, symbol_input: string, amountToClaim: string;
-    const { dropTokenAddress, deployContractLoading} = this.state;
+    const { dropTokenAddress, deployContractLoading } = this.state;
     return (
       <>
         {!dropTokenAddress ? (
@@ -71,7 +79,7 @@ export class TokenMinting extends React.Component {
             </div>
             <button
               onClick={() =>
-                this.deployClubTokenContract(name_input,symbol_input)
+                this.deployClubTokenContract(name_input, symbol_input)
               }
               disabled={deployContractLoading}
             >
@@ -84,11 +92,27 @@ export class TokenMinting extends React.Component {
             <br></br>
             <br></br>
             <div>
-              <input placeholder='Enter amount to claim' onChange={(e) => (amountToClaim = e.target.value)}/>
-              <button onClick={() => getAppControllers().thirdweb.claimClubToken(amountToClaim)}>Claim club tokens</button>
+              <input
+                placeholder="Enter amount to claim"
+                onChange={(e) => (amountToClaim = e.target.value)}
+              />
+              <button
+                onClick={() =>
+                  getAppControllers().thirdweb.claimClubToken(amountToClaim)
+                }
+              >
+                Claim club tokens
+              </button>
+              <br></br>
+              <button
+                onClick={() =>
+                  getAppControllers().thirdweb.setClaimCondition([
+                    { startTime: new Date(), price: 0.1 },
+                  ])
+                }
+              >Set Claim Condition</button>
             </div>
           </>
-          
         )}
       </>
     );
