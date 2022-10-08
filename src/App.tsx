@@ -8,6 +8,7 @@ import { Payload } from "./components/Payload";
 import { ConnectWallet } from "@thirdweb-dev/react";
 import { UserWallet } from "./components/UserWallet";
 import { TokenMinting } from "./components/TokenMinting";
+import { ClubWallet } from "./components/ClubWallet";
 export interface IAppState {
   loading: boolean;
   scanner: boolean;
@@ -375,6 +376,9 @@ class App extends React.Component<{}> {
                 />
               </>
             )}
+            <br></br>
+            <br></br>
+            <ClubWallet />
           </>
         )}
         <hr/>
