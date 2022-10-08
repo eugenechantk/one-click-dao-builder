@@ -330,7 +330,7 @@ class App extends React.Component<{}> {
             {
               // View to approve connection to dApp
               peerMeta &&
-              peerMeta.name && (
+              peerMeta.name && ( 
                 <>
                   <p>{peerMeta.name}</p>
                   <p>{peerMeta.description}</p>

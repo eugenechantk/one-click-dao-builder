@@ -15,7 +15,7 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
   const { sdkController, sdk, userAddress } = props;
   const [nameInput, setNameInput] = useState("");
   const [symbolInput, setSymbolInput] = useState("");
-  const [dropTokenAddress, setDropTokenAddress] = useState("");
+  const [dropTokenAddress, setDropTokenAddress] = useState(String(localStorage.getItem("club_token_address")).replace(/['"]+/g, "") || "");
   const [loading, setLoading] = useState(false);
   const [amountToClaim, setAmountToClaim] = useState("");
   const clubTokenContract = useContract(dropTokenAddress);
@@ -26,7 +26,8 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
         nameInput,
         symbolInput
       );
-    setDropTokenAddress(dropTokenAddress);
+    const formattedAddress = dropTokenAddress.replace(/['"]+/g, "");
+    setDropTokenAddress(formattedAddress);
   };
 
   const claimClubToken = async () => {
@@ -91,6 +92,14 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
               }
             >
               Set Claim Condition
+            </button>
+            <br></br>
+            <button
+              onClick={() =>
+                getAppControllers().thirdweb.resetClaimCondition()
+              }
+            >
+              Remove Claim Condition
             </button>
           </div>
         </>
