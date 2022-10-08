@@ -91,6 +91,7 @@ export class ThirdWebController {
     console.log(transactionResult);
   }
 
+  // End claim period by resetting the claim condition to an empty condition array
   public async resetClaimCondition(): Promise<void> {
     const formattedAddress = this.clubTokenAddress.replace(/['"]+/g, "");
     const clubTokenContract = await this.sdk.getTokenDrop(formattedAddress);
@@ -99,6 +100,7 @@ export class ThirdWebController {
     console.log(transactionResult);
   }
 
+  // Claim tokens of the address
   public async claimClubToken(amountToClaim: string) {
     const formattedAddress = this.clubTokenAddress.replace(/['"]+/g, "");
     const clubTokenContract =
