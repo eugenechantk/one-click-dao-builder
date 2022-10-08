@@ -16,11 +16,11 @@ export interface IAppState {
   transactionLoading: boolean;
   uri: string;
   peerMeta: {
-      description: string;
-      url: string;
-      icons: string[];
-      name: string;
-      ssl: boolean;
+    description: string;
+    url: string;
+    icons: string[];
+    name: string;
+    ssl: boolean;
   };
   connected: boolean;
   chainId: number;
@@ -75,11 +75,13 @@ class App extends React.Component<{}> {
 
     // TODO: Modify how/what we store in localStorage for the cache
     // NOTE: the connector is stored in localStorage once connected
-    const wcSession = getCachedSession('walletconnect');
+    const wcSession = getCachedSession("walletconnect");
 
     if (!wcSession) {
       await getAppControllers().wallet.init(chainId);
-      this.setState ({ address: getAppControllers().wallet.getWallet().address })
+      this.setState({
+        address: getAppControllers().wallet.getWallet().address,
+      });
     } else {
       const connector = new WalletConnect({ session: wcSession });
 
@@ -101,7 +103,7 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
-    
+
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
@@ -254,7 +256,9 @@ class App extends React.Component<{}> {
 
     const params = payload.params[0];
     if (request.method === "eth_sendTransaction") {
-      payload.params[0] = await getAppControllers().wallet.populateTransaction(params);
+      payload.params[0] = await getAppControllers().wallet.populateTransaction(
+        params
+      );
     }
 
     this.setState({
@@ -262,13 +266,12 @@ class App extends React.Component<{}> {
     });
   };
 
-
   // Approve request from connected dApp using rpcEngine
   public approveRequest = async () => {
     const { connector, payload } = this.state;
 
     try {
-      this.setState({transactionLoading: true})
+      this.setState({ transactionLoading: true });
       // Use the signer function of the specific rpcEngine (i.e. ethereum.ts/signEthereumRequests)
       await getAppConfig().rpcEngine.signer(
         payload,
@@ -303,7 +306,7 @@ class App extends React.Component<{}> {
 
   public closeRequest = async () => {
     const { requests, payload } = this.state;
-    this.setState({transactionLoading: false});
+    this.setState({ transactionLoading: false });
     const filteredRequests = requests.filter(
       (request) => request.id !== payload.id
     );
@@ -314,24 +317,29 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const { peerMeta, connected, requests, payload, address, userAddress } = this.state;
+    const { peerMeta, connected, requests, payload, address, userAddress } =
+      this.state;
     return (
       <>
         <h4>User's wallet</h4>
-        <ConnectWallet/>
-        <UserWallet setUserAddress={(userAddress) => this.setState({userAddress})}/>
+        <ConnectWallet />
+        <UserWallet
+          setUserAddress={(userAddress) => this.setState({ userAddress })}
+        />
         <></>
-        <hr/>
+        <hr />
         <h4>Club wallet</h4>
         <div>{address}</div>
         <br></br>
         {!connected ? (
           <>
-            <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
+            <input
+              onChange={this.onURIPaste}
+              placeholder="Paste wc uri"
+            ></input>
             {
               // View to approve connection to dApp
-              peerMeta &&
-              peerMeta.name && ( 
+              peerMeta && peerMeta.name && (
                 <>
                   <p>{peerMeta.name}</p>
                   <p>{peerMeta.description}</p>
@@ -355,9 +363,7 @@ class App extends React.Component<{}> {
                   {requests.map((request, index) => (
                     <div key={request.id}>
                       <p>{request.method}</p>
-                      <button
-                        onClick={() => this.openRequest(request)}
-                      >
+                      <button onClick={() => this.openRequest(request)}>
                         Sign
                       </button>
                     </div>
@@ -371,19 +377,25 @@ class App extends React.Component<{}> {
                   payload={payload}
                   approveRequest={this.approveRequest}
                   rejectRequest={this.rejectRequest}
-                  renderPayload={(payload: any) => getAppConfig().rpcEngine.render(payload)}
+                  renderPayload={(payload: any) =>
+                    getAppConfig().rpcEngine.render(payload)
+                  }
                   appState={this.state}
                 />
               </>
             )}
-            <br></br>
-            <br></br>
-            <ClubWallet />
           </>
         )}
-        <hr/>
+        <br></br>
+        <br></br>
+        <ClubWallet />
+        <hr />
         <h4>Club tokens</h4>
-        <TokenMinting sdkController={getAppControllers().thirdweb} sdk={getAppControllers().thirdweb.sdk} userAddress={userAddress}/>
+        <TokenMinting
+          sdkController={getAppControllers().thirdweb}
+          sdk={getAppControllers().thirdweb.sdk}
+          userAddress={userAddress}
+        />
         <div></div>
       </>
     );
