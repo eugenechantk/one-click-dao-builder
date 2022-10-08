@@ -1,4 +1,5 @@
-import { IRpcEngine, IAppState } from "../helpers/types";
+import { IRpcEngine } from "../helpers/types";
+import { IAppState } from "../App";
 import ethereum from "./ethereum";
 
 class RpcEngine implements IRpcEngine {

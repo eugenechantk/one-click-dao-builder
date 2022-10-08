@@ -3,13 +3,32 @@ import { getAppControllers } from "./controllers";
 import { getAppConfig } from "./config";
 import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
-import { IAppState } from "./helpers/types";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
-
-export const DEFAULT_WALLET = getAppControllers().wallet.getWallet();
-export const DEFAULT_ACCOUNTS = [DEFAULT_WALLET.address];
-export const DEFAULT_ADDRESS = DEFAULT_ACCOUNTS[DEFAULT_ACTIVE_INDEX];
+import { ConnectWallet } from "@thirdweb-dev/react";
+import { UserWallet } from "./components/UserWallet";
+import { TokenMinting } from "./components/TokenMinting";
+export interface IAppState {
+  loading: boolean;
+  scanner: boolean;
+  connector: WalletConnect | null;
+  transactionLoading: boolean;
+  uri: string;
+  peerMeta: {
+      description: string;
+      url: string;
+      icons: string[];
+      name: string;
+      ssl: boolean;
+  };
+  connected: boolean;
+  chainId: number;
+  address: string;
+  requests: any[];
+  results: any[];
+  payload: any;
+  userAddress: string;
+}
 
 export const INITIAL_STATE: IAppState = {
   loading: false,
@@ -27,10 +46,12 @@ export const INITIAL_STATE: IAppState = {
   connected: false,
   chainId: getAppConfig().chainId || DEFAULT_CHAIN_ID,
   // TODO: simplify accounts, address, activeIndex since there is only 1 account
-  address: DEFAULT_ADDRESS,
+  // address: DEFAULT_ADDRESS,
+  address: getAppControllers().wallet.getWallet().address || "",
   requests: [],
   results: [],
   payload: null,
+  userAddress: "",
 };
 
 class App extends React.Component<{}> {
@@ -53,12 +74,13 @@ class App extends React.Component<{}> {
 
     // TODO: Modify how/what we store in localStorage for the cache
     // NOTE: the connector is stored in localStorage once connected
-    const session = getCachedSession();
+    const wcSession = getCachedSession('walletconnect');
 
-    if (!session) {
+    if (!wcSession) {
       await getAppControllers().wallet.init(chainId);
+      this.setState ({ address: getAppControllers().wallet.getWallet().address })
     } else {
-      const connector = new WalletConnect({ session });
+      const connector = new WalletConnect({ session: wcSession });
 
       const { connected, accounts, peerMeta } = connector;
 
@@ -78,7 +100,7 @@ class App extends React.Component<{}> {
 
       this.subscribeToEvents();
     }
-    localStorage.setItem("MNEMONIC", String(process.env.REACT_APP_MNEMONIC));
+    
     await getAppConfig().events.init(this.state, this.bindedSetState);
   };
 
@@ -291,28 +313,37 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const { peerMeta, connected, requests, payload, address } = this.state;
-
+    const { peerMeta, connected, requests, payload, address, userAddress } = this.state;
     return (
       <>
+        <h4>User's wallet</h4>
+        <ConnectWallet/>
+        <UserWallet setUserAddress={(userAddress) => this.setState({userAddress})}/>
+        <></>
+        <hr/>
+        <h4>Club wallet</h4>
         <div>{address}</div>
-        <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
         <br></br>
         {!connected ? (
-          // View to approve connection to dApp
-          peerMeta &&
-          peerMeta.name && (
-            <>
-              <p>{peerMeta.name}</p>
-              <p>{peerMeta.description}</p>
-              <button onClick={this.approveSession}>Approve</button>
-              <button>Rejects</button>
-            </>
-          )
+          <>
+            <input onChange={this.onURIPaste} placeholder="Paste wc uri"></input>
+            {
+              // View to approve connection to dApp
+              peerMeta &&
+              peerMeta.name && ( 
+                <>
+                  <p>{peerMeta.name}</p>
+                  <p>{peerMeta.description}</p>
+                  <button onClick={this.approveSession}>Approve</button>
+                  <button>Rejects</button>
+                </>
+              )
+            }
+          </>
         ) : (
           <>
             {/* Show the dApp that is connected */}
-            <h6>{"Connected to"}</h6>
+            <h5>{"Connected to"}</h5>
             <img src={peerMeta.icons[0]} alt={peerMeta.name} />
             <div>{peerMeta.name}</div>
             <button onClick={this.killSession}>Disconnect</button>
@@ -346,6 +377,9 @@ class App extends React.Component<{}> {
             )}
           </>
         )}
+        <hr/>
+        <h4>Club tokens</h4>
+        <TokenMinting sdkController={getAppControllers().thirdweb} sdk={getAppControllers().thirdweb.sdk} userAddress={userAddress}/>
         <div></div>
       </>
     );
