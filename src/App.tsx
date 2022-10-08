@@ -5,10 +5,9 @@ import { DEFAULT_CHAIN_ID, DEFAULT_ACTIVE_INDEX } from "./constraints/default";
 import { getCachedSession } from "./helpers/utilities";
 import WalletConnect from "@walletconnect/client";
 import { Payload } from "./components/Payload";
-import { TokenMinting } from "./components/TokenMinting";
-import { ThirdWebController } from "./controllers/thirdweb";
-import { ConnectWallet, useAddress } from "@thirdweb-dev/react";
+import { ConnectWallet } from "@thirdweb-dev/react";
 import { UserWallet } from "./components/UserWallet";
+import { TokenMinting } from "./components/TokenMinting";
 export interface IAppState {
   loading: boolean;
   scanner: boolean;
@@ -314,7 +313,7 @@ class App extends React.Component<{}> {
   };
 
   public render() {
-    const { peerMeta, connected, requests, payload, address } = this.state;
+    const { peerMeta, connected, requests, payload, address, userAddress } = this.state;
     return (
       <>
         <h4>User's wallet</h4>
@@ -380,7 +379,7 @@ class App extends React.Component<{}> {
         )}
         <hr/>
         <h4>Club tokens</h4>
-        <TokenMinting />
+        <TokenMinting sdkController={getAppControllers().thirdweb} sdk={getAppControllers().thirdweb.sdk} userAddress={userAddress}/>
         <div></div>
       </>
     );

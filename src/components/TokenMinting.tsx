@@ -1,120 +1,100 @@
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
-import React from "react";
-import { getAppControllers } from "../controllers";
 import { ThirdWebController } from "../controllers/thirdweb";
-import { getLocal } from "../helpers/local";
+import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { useEffect, useState } from "react";
+import { getAppControllers } from "../controllers";
+import { useContract, UseContractResult } from "@thirdweb-dev/react";
+import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
 
-export interface ITokenMintingStates {
+export interface ITokenMintingFCProps {
   sdkController: ThirdWebController;
   sdk: ThirdwebSDK;
-  dropTokenAddress: string;
-  deployContractLoading: boolean;
+  userAddress: string;
 }
 
-export const INITIAL_STATE = {
-  sdkController: getAppControllers().thirdweb,
-  sdk: getAppControllers().thirdweb.sdk,
-  // TODO: remove drop token address from localStorage and fetch it from database
-  dropTokenAddress: getLocal("club_token_address")
-    ? getLocal("club_token_address")
-    : "",
-  deployContractLoading: false,
-};
-export class TokenMinting extends React.Component {
-  public state: ITokenMintingStates;
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      ...INITIAL_STATE,
-    };
-  }
+export const TokenMinting = (props: ITokenMintingFCProps) => {
+  const { sdkController, sdk, userAddress } = props;
+  const [nameInput, setNameInput] = useState("");
+  const [symbolInput, setSymbolInput] = useState("");
+  const [dropTokenAddress, setDropTokenAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [amountToClaim, setAmountToClaim] = useState("");
+  const clubTokenContract = useContract(dropTokenAddress);
 
-  componentDidMount(): void {
-    this.init();
-  }
+  const deployClubTokenContract = async (): Promise<void> => {
+    const dropTokenAddress =
+      await getAppControllers().thirdweb.getClubTokenAddress(
+        nameInput,
+        symbolInput
+      );
+    setDropTokenAddress(dropTokenAddress);
+  };
 
-  public init() {
-    const { sdkController } = this.state;
-    sdkController.getSdkAddress();
-  }
-
-  public async deployClubTokenContract(
-    name_input: string,
-    symbol_input: string
-  ) {
-    const { sdkController } = this.state;
-    this.setState({ deployContractLoading: true });
-    const dropTokenAddress = await sdkController.getClubTokenAddress(
-      name_input,
-      symbol_input
+  const claimClubToken = async () => {
+    const claimResult = await clubTokenContract.contract?.erc20.claim(
+      amountToClaim
     );
-    this.setState({ dropTokenAddress, deployContractLoading: false });
-  }
+    console.log(claimResult);
+  };
 
-  render() {
-    let name_input: string, symbol_input: string, amountToClaim: string;
-    const { dropTokenAddress, deployContractLoading } = this.state;
-    return (
-      <>
-        {!dropTokenAddress ? (
-          <>
-            <h4>Token minting section</h4>
-            <div>
-              <label>Token name</label>
-              <div>
-                <input
-                  placeholder="Token name"
-                  onChange={(e) => (name_input = e.target.value)}
-                ></input>
-              </div>
-            </div>
-            <div>
-              <label>Token symbol</label>
-              <div>
-                <input
-                  placeholder="Token symbol"
-                  onChange={(e) => (symbol_input = e.target.value)}
-                ></input>
-              </div>
-            </div>
-            <button
-              onClick={() =>
-                this.deployClubTokenContract(name_input, symbol_input)
-              }
-              disabled={deployContractLoading}
-            >
-              Mint drop token
-            </button>
-          </>
-        ) : (
-          <>
-            <>Token minted! Contract address: {dropTokenAddress}</>
-            <br></br>
-            <br></br>
+  return (
+    <>
+      {!dropTokenAddress ? (
+        <>
+          <h4>Token minting section</h4>
+          <div>
+            <label>Token name</label>
             <div>
               <input
-                placeholder="Enter amount to claim"
-                onChange={(e) => (amountToClaim = e.target.value)}
-              />
-              <button
-                onClick={() =>
-                  getAppControllers().thirdweb.claimClubToken(amountToClaim)
-                }
-              >
-                Claim club tokens
-              </button>
-              <br></br>
-              <button
-                onClick={() =>
-                  getAppControllers().thirdweb.setClaimCondition([
-                    { startTime: new Date(), price: 0.1 },
-                  ])
-                }
-              >Set Claim Condition</button>
+                placeholder="Token name"
+                onChange={(e) => setNameInput(e.target.value)}
+              ></input>
             </div>
-          </>
-        )}
-      </>
-    );
-  }
-}
+          </div>
+          <div>
+            <label>Token symbol</label>
+            <div>
+              <input
+                placeholder="Token symbol"
+                onChange={(e) => setSymbolInput(e.target.value)}
+              ></input>
+            </div>
+          </div>
+          <button
+            onClick={async () => await deployClubTokenContract()}
+            disabled={loading}
+          >
+            Mint drop token
+          </button>
+        </>
+      ) : (
+        <>
+          <>Token minted! Contract address: {dropTokenAddress}</>
+          <br></br>
+          <br></br>
+          <>Recipient address: {userAddress}</>
+          <br></br>
+          <br></br>
+          <div>
+            <input
+              placeholder="Enter amount to claim"
+              onChange={(e) => setAmountToClaim(e.target.value)}
+            />
+            <button onClick={async () => await claimClubToken()}>
+              Claim club tokens
+            </button>
+            <br></br>
+            <button
+              onClick={() =>
+                getAppControllers().thirdweb.setClaimCondition([
+                  { startTime: new Date(), price: 0.01 },
+                ])
+              }
+            >
+              Set Claim Condition
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  );
+};

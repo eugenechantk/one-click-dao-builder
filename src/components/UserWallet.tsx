@@ -19,7 +19,7 @@ export const UserWallet = (props: IUserWalletProps) => {
         getSdkAddress();
         setUserAddress(String(address));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [address]);
+    }, [address, sdkAddress]);
     return (
         <>
             <p>User's address: {address}</p>
