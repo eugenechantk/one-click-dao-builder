@@ -1,11 +1,9 @@
 import * as ethers from "ethers";
 import * as ethSigUtil from "eth-sig-util";
 import { getChainData } from "../helpers/utilities";
-import { 
-  DEFAULT_ACTIVE_INDEX,
-  DEFAULT_CHAIN_ID
- } from "../constraints/default";
+import { DEFAULT_ACTIVE_INDEX, DEFAULT_CHAIN_ID } from "../constraints/default";
 import { getAppConfig } from "../config";
+import axios from "axios";
 
 export class WalletController {
   // public path: string;
@@ -138,10 +136,14 @@ export class WalletController {
           tx.gasPrice = ethers.BigNumber.from(tx.gasPrice).toHexString();
         }
         if (tx.maxFeePerGas) {
-          tx.maxFeePerGas = ethers.BigNumber.from(tx.maxFeePerGas).toHexString();
+          tx.maxFeePerGas = ethers.BigNumber.from(
+            tx.maxFeePerGas
+          ).toHexString();
         }
         if (tx.maxPriorityFeePerGas) {
-          tx.maxPriorityFeePerGas = ethers.BigNumber.from(tx.maxPriorityFeePerGas).toHexString();
+          tx.maxPriorityFeePerGas = ethers.BigNumber.from(
+            tx.maxPriorityFeePerGas
+          ).toHexString();
         }
         tx.nonce = ethers.BigNumber.from(tx.nonce).toHexString();
       } catch (err) {
@@ -197,7 +199,9 @@ export class WalletController {
   public async signMessage(data: any) {
     if (this.wallet) {
       const signingKey = new ethers.utils.SigningKey(this.wallet.privateKey);
-      const sigParams = await signingKey.signDigest(ethers.utils.arrayify(data));
+      const sigParams = await signingKey.signDigest(
+        ethers.utils.arrayify(data)
+      );
       const result = await ethers.utils.joinSignature(sigParams);
       return result;
     } else {
@@ -209,7 +213,9 @@ export class WalletController {
   public async signPersonalMessage(message: any) {
     if (this.wallet) {
       const result = await this.wallet.signMessage(
-        ethers.utils.isHexString(message) ? ethers.utils.arrayify(message) : message,
+        ethers.utils.isHexString(message)
+          ? ethers.utils.arrayify(message)
+          : message
       );
       return result;
     } else {
@@ -220,14 +226,77 @@ export class WalletController {
 
   public async signTypedData(data: any) {
     if (this.wallet) {
-      const result = ethSigUtil.signTypedData(Buffer.from(this.wallet.privateKey.slice(2), "hex"), {
-        data: JSON.parse(data),
-      });
+      const result = ethSigUtil.signTypedData(
+        Buffer.from(this.wallet.privateKey.slice(2), "hex"),
+        {
+          data: JSON.parse(data),
+        }
+      );
       return result;
     } else {
       console.error("No Active Account");
     }
     return null;
+  }
+
+  public async getAllBalance() {
+    let balance;
+    if (!this.wallet) {
+      this.wallet = this.init();
+    }
+    const MORALIES_API_KEY = String(process.env.REACT_APP_MORALIS_KEY);
+
+    // Define the API options to get ERC20 token balance via Moralis
+    const tokensOptions = {
+      method: "GET",
+      url: "https://deep-index.moralis.io/api/v2/%address%/erc20".replace(
+        "%address%",
+        this.wallet.address
+      ),
+      params: { chain: getChainData(getAppConfig().chainId).network },
+      headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
+    };
+
+    // Define the API options to get native token balance via Moralis
+    const nativeOptions = {
+      method: "GET",
+      url: "https://deep-index.moralis.io/api/v2/%address%/balance".replace(
+        "%address%",
+        this.wallet.address
+      ),
+      params: { chain: getChainData(getAppConfig().chainId).network },
+      headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
+    };
+
+    const nativeBalance = await axios
+      .request(nativeOptions)
+      .then((response) => {
+        return response.data.balance;
+      })
+      .catch((error) => console.log(error));
+
+    // Initialize the balance array with the native token
+    balance = [
+      {
+        token_address: "",
+        name: "Ethereum",
+        symbol: "ETH",
+        logo: null,
+        thumbnail: null,
+        decimals: 18,
+        balance: String(nativeBalance),
+      },
+    ];
+
+    // Fetch the balance of other erc20 tokens, and then add to the balance array
+    await axios
+      .request(tokensOptions)
+      .then((response) => {
+        return response.data;
+      }).then((data:[]) => data.forEach(tokenBalance => balance.push(tokenBalance)))
+      .catch((error) => console.log(error));
+
+    return balance;
   }
 }
 
