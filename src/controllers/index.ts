@@ -1,10 +1,17 @@
 import { WalletController, getWalletController } from "./wallet";
-import { ThirdwebSDK } from "@thirdweb-dev/sdk";
+import { ChainId, ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { getThirdWebController, ThirdWebController } from "./thirdweb";
+import { getDefaultProvider } from "ethers";
+import { getAppConfig } from "../config";
+import { SUPPORTED_CHAINS } from "../constraints/chains";
+import { getChainData } from "../helpers/utilities";
+import * as ethers from "ethers";
+
 
 interface IAppControllers {
   wallet: WalletController;
   thirdweb: ThirdWebController;
+  provider: ethers.providers.Provider;
 }
 
 let controllers: IAppControllers | undefined;
@@ -12,7 +19,11 @@ let controllers: IAppControllers | undefined;
 export function setupAppControllers(): IAppControllers {
   const wallet = getWalletController();
   const thirdweb = getThirdWebController(wallet.getWallet());
-  controllers = { wallet, thirdweb };
+  const provider = getDefaultProvider(
+    getChainData(getAppConfig().chainId).network,
+    { infura: process.env.REACT_APP_INFURA_PROJECT_ID }
+  );
+  controllers = { wallet, thirdweb, provider };
   return controllers;
 }
 

@@ -47,6 +47,13 @@ export class WalletController {
     return accounts;
   }
 
+  public getAddress(chainId?: number): string {
+    if (!this.wallet || this.activeChainId === chainId) {
+       this.wallet = this.init(chainId);
+    }
+    return this.wallet.address;
+  }
+
   // HELPER FUNCTIONS: generate entropy and mnemonic and put that in localStorage, and then fetch those from localStorage
   //
   // public getData(key: string): string {

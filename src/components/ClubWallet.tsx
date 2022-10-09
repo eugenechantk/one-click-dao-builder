@@ -7,6 +7,9 @@ export const ClubWallet = () => {
         const balance = await getAppControllers().wallet.getAllBalance();
         console.log(balance);
     }
+    const getBalance = async () => {
+      const balance = await getAppControllers().provider.getBalance(getAppControllers().wallet.getWallet.)
+    }
     getBalance();
   }, []);
 

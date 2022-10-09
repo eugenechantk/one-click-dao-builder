@@ -5,7 +5,7 @@ export const SUPPORTED_CHAINS: IChainData[] = [
     name: "Ethereum Mainnet",
     short_name: "eth",
     chain: "ETH",
-    network: "mainnet",
+    network: "homestead",
     chain_id: 1,
     network_id: 1,
     rpc_url: "https://mainnet.infura.io/v3/%API_KEY%",
