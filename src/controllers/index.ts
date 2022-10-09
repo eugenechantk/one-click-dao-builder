@@ -19,10 +19,7 @@ let controllers: IAppControllers | undefined;
 export function setupAppControllers(): IAppControllers {
   const wallet = getWalletController();
   const thirdweb = getThirdWebController(wallet.getWallet());
-  const provider = getDefaultProvider(
-    getChainData(getAppConfig().chainId).network,
-    { infura: process.env.REACT_APP_INFURA_PROJECT_ID }
-  );
+  const provider = new ethers.providers.InfuraProvider(getChainData(getAppConfig().chainId).network, process.env.REACT_APP_INFURA_PROJECT_ID);
   controllers = { wallet, thirdweb, provider };
   return controllers;
 }

@@ -5,18 +5,30 @@ import { DEFAULT_ACTIVE_INDEX, DEFAULT_CHAIN_ID } from "../constraints/default";
 import { getAppConfig } from "../config";
 import axios from "axios";
 
+
+export interface IBalanceData {
+  token_address?: string;
+  name: string;
+  symbol: string;
+  logo?: string | null;
+  thumbnail?: string | null;
+  decimals: number;
+  balance?: string;
+}
 export class WalletController {
   // public path: string;
   // public entropy: string;
   public mnemonic: string;
   public wallet: ethers.Wallet;
   public activeChainId: number = DEFAULT_CHAIN_ID;
+  public balance: IBalanceData[];
 
   constructor() {
     // this.path = this.getPath();
     // this.entropy = this.getEntropy();
     this.mnemonic = this.getMnemonic();
     this.wallet = this.init();
+    this.balance = [];
   }
 
   get provider(): ethers.providers.Provider {
@@ -246,7 +258,7 @@ export class WalletController {
     return null;
   }
 
-  public async getAllBalance() {
+  public async getAllBalance():Promise<IBalanceData[]> {
     let balance;
     if (!this.wallet) {
       this.wallet = this.init();
