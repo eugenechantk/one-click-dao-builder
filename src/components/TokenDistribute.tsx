@@ -1,3 +1,4 @@
+import { useContract, useTokenDrop } from "@thirdweb-dev/react";
 import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
@@ -8,6 +9,8 @@ export const TokenDistribute = () => {
   const [clubTokenAddress, setClubTokenAddress] = useState("");
   const [contract, setContract] = useState({} as SmartContract);
   const [walletBalance, setWalletBalance] = useState([] as IBalanceData[]);
+  const [holderBalance, setHolderBalance] = useState({} as {[k: string]: {balance: BigNumber, power: BigNumber}});
+  const [tokenSupply, setTokenSupply] = useState(0);
 
   useEffect(() => {
     const fetchAddress = async () => await getAppControllers().thirdweb.getClubTokenAddress().then((address) => {
@@ -28,7 +31,7 @@ export const TokenDistribute = () => {
   }, [clubTokenAddress]);
 
   const getAllHolder = async () => {
-    let holderBalance: {[k: string]: BigNumber} = {};
+    let _holderBalance: {[k: string]: {balance: BigNumber, power: BigNumber}} = {};
 
     // Fetch all the events related to this club token contract
     const events = await contract.events.getAllEvents();
@@ -43,19 +46,19 @@ export const TokenDistribute = () => {
     // Function to populate the holderBalance dict
     transferEvent.forEach((event) => {
       // Add the addresses if they are not already in the holder-balance dictionary
-      if (!(event.data.from in holderBalance)){
-        holderBalance[event.data.from] = BigNumber.from(0);
+      if (!(event.data.from in _holderBalance)){
+        _holderBalance[event.data.from] = {balance: BigNumber.from(0), power:BigNumber.from(0)};
       }
-      if (!(event.data.to in holderBalance)){
-        holderBalance[event.data.to] = BigNumber.from(0);
+      if (!(event.data.to in _holderBalance)){
+        _holderBalance[event.data.to] = {balance: BigNumber.from(0), power:BigNumber.from(0)};
       }
       // Update the value of each balance
-      holderBalance[event.data.from] = holderBalance[event.data.from].sub(event.data.value);
-      holderBalance[event.data.to] = holderBalance[event.data.to].add(event.data.value);
+      _holderBalance[event.data.from].balance = _holderBalance[event.data.from].balance.sub(event.data.value);
+      _holderBalance[event.data.to].balance = _holderBalance[event.data.to].balance.add(event.data.value);
     })
     // remove the balance of the root address
-    delete holderBalance["0x0000000000000000000000000000000000000000"];
-    return holderBalance;
+    delete _holderBalance["0x0000000000000000000000000000000000000000"];
+    setHolderBalance(_holderBalance);
   }
 
   const getWalletBalance = async () => {
@@ -63,10 +66,16 @@ export const TokenDistribute = () => {
     setWalletBalance(balance);
   }
 
+  const getClaimPower = async () => {
+    const totalSupply = await contract.erc20.totalSupply();
+    console.log(totalSupply);
+  }
+
   return (
     <>
       <p>Token Distribute</p>
       <button onClick={() => getAllHolder()}>Get all token holders</button>
+      <button onClick={() => getClaimPower()}>See claim power</button>
     </>
   );
 };
