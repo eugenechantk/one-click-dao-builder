@@ -2,10 +2,12 @@ import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contr
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
 import { getAppControllers } from "../controllers";
+import { IBalanceData } from "../controllers/wallet";
 
 export const TokenDistribute = () => {
   const [clubTokenAddress, setClubTokenAddress] = useState("");
   const [contract, setContract] = useState({} as SmartContract);
+  const [walletBalance, setWalletBalance] = useState([] as IBalanceData[]);
 
   useEffect(() => {
     const fetchAddress = async () => await getAppControllers().thirdweb.getClubTokenAddress().then((address) => {
@@ -13,6 +15,7 @@ export const TokenDistribute = () => {
       setClubTokenAddress(formattedAddress);
     });
     fetchAddress();
+    getWalletBalance();
   }, [])
 
   useEffect(() => {
@@ -53,6 +56,11 @@ export const TokenDistribute = () => {
     // remove the balance of the root address
     delete holderBalance["0x0000000000000000000000000000000000000000"];
     return holderBalance;
+  }
+
+  const getWalletBalance = async () => {
+    const balance = await getAppControllers().wallet.getAllBalance()
+    setWalletBalance(balance);
   }
 
   return (
