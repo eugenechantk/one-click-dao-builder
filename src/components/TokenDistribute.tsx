@@ -11,6 +11,7 @@ export const TokenDistribute = () => {
   const [walletBalance, setWalletBalance] = useState([] as IBalanceData[]);
   const [holderBalance, setHolderBalance] = useState({} as {[k: string]: {balance: BigNumber, power: BigNumber}});
   const [tokenSupply, setTokenSupply] = useState(0);
+  const mulFactor = BigNumber.from("1000000");
 
   useEffect(() => {
     const fetchAddress = async () => await getAppControllers().thirdweb.getClubTokenAddress().then((address) => {
@@ -68,7 +69,14 @@ export const TokenDistribute = () => {
 
   const getClaimPower = async () => {
     const totalSupply = await contract.erc20.totalSupply();
-    console.log(totalSupply);
+    let _holderBalance = holderBalance;
+    Object.entries(_holderBalance).forEach(([address, value]) => {
+      const {balance} = value;
+      // In order to return a BigNumber when balance/totalSupply, I have to multiply the balance by a factor such thatn balance >> totalSupply
+      // When calculating the member's share on each token, I will divide the share by the multiplying factor
+      _holderBalance[address].power = balance.mul(mulFactor).div(totalSupply.value);
+    })
+    setHolderBalance(_holderBalance);
   }
 
   return (
