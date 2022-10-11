@@ -1,7 +1,7 @@
 import { ThirdWebController } from "../controllers/thirdweb";
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { useEffect, useState } from "react";
-import { addTokenController, getAppControllers } from "../controllers";
+import { getAppControllers } from "../controllers";
 import { useContract } from "@thirdweb-dev/react";
 import { TokenDistribute } from "./TokenDistribute";
 
@@ -28,8 +28,8 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
       );
     const formattedAddress = dropTokenAddress.replace(/['"]+/g, "");
     setDropTokenAddress(formattedAddress);
-    addTokenController(formattedAddress);
-    getAppControllers().token?.init(formattedAddress);
+    // addTokenController(formattedAddress);
+    // getAppControllers().token?.init(formattedAddress);
   };
 
   const claimClubToken = async () => {

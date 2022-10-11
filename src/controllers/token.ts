@@ -5,10 +5,12 @@ import { getAppControllers } from ".";
 export class TokenController {
   public tokenAddress: string;
   public tokenContract: SmartContract;
+  public balancePerMember: any;
 
   constructor(address:string) {
     this.tokenAddress = address;
     this.tokenContract = {} as SmartContract;
+    this.balancePerMember = {};
   }
 
   public async init(address:string) {

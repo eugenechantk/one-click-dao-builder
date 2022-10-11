@@ -43,16 +43,16 @@ export class ThirdWebController {
   // Deploy the drop token contract with the name and symbol as params
   // RETURN none: it will set the dropTokenAddress var as the deployed contract address
   public async getClubTokenAddress(
-    name_input: string,
-    symbol_input: string,
+    name_input?: string,
+    symbol_input?: string,
     primary_sale_recipient_input?: string
   ): Promise<string> {
     if (!this.clubTokenAddress) {
       let contractAddress = "";
       try {
         contractAddress = await this.sdk.deployer.deployTokenDrop({
-          name: name_input,
-          symbol: symbol_input,
+          name: name_input || "",
+          symbol: symbol_input || "",
           primary_sale_recipient:
             getAppControllers().wallet.getWallet().address,
         });
