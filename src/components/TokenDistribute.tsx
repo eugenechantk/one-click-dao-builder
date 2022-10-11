@@ -10,7 +10,6 @@ export const TokenDistribute = () => {
     const fetchAddress = async () => await getAppControllers().thirdweb.getClubTokenAddress().then((address) => {
       const formattedAddress = address.replace(/['"]+/g, "");
       setClubTokenAddress(formattedAddress);
-      console.log(formattedAddress);
     });
     fetchAddress();
   }, [])
@@ -19,16 +18,27 @@ export const TokenDistribute = () => {
     const fetchContract = async () => {
       await getAppControllers().thirdweb.sdk.getContract(clubTokenAddress).then(contract => {
         setContract(contract);
-        console.log(contract);
       })
     }
     fetchContract();
   }, [clubTokenAddress]);
 
+  const getAllHolder = async () => {
+    let holderBalance;
+    const events = await contract.events.getAllEvents();
+    const transferEvent = events.filter((event) => {
+      return event.eventName === "Transfer";
+    })
+    transferEvent.reverse();
+    transferEvent.forEach((event) => {
+      
+    })
+  }
+
   return (
     <>
       <p>Token Distribute</p>
-      <button>Get all token holders</button>
+      <button onClick={() => getAllHolder()}>Get all token holders</button>
     </>
   );
 };
