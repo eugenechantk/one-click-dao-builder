@@ -9,6 +9,7 @@ import { ConnectWallet } from "@thirdweb-dev/react";
 import { UserWallet } from "./components/UserWallet";
 import { TokenMinting } from "./components/TokenMinting";
 import { ClubWallet } from "./components/ClubWallet";
+import { TokenDistribute } from "./components/TokenDistribute";
 export interface IAppState {
   loading: boolean;
   scanner: boolean;
@@ -396,6 +397,8 @@ class App extends React.Component<{}> {
           sdk={getAppControllers().thirdweb.sdk}
           userAddress={userAddress}
         />
+        <br></br>
+        <br></br>
         <div></div>
       </>
     );
