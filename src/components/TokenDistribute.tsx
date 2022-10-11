@@ -1,4 +1,5 @@
 import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
+import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
 import { getAppControllers } from "../controllers";
 
@@ -24,15 +25,24 @@ export const TokenDistribute = () => {
   }, [clubTokenAddress]);
 
   const getAllHolder = async () => {
-    let holderBalance;
+    let holderBalance: {[k: string]: BigNumber} = {};
     const events = await contract.events.getAllEvents();
     const transferEvent = events.filter((event) => {
       return event.eventName === "Transfer";
     })
     transferEvent.reverse();
+    console.log(transferEvent);
     transferEvent.forEach((event) => {
-      
+      if (!(event.data.from in holderBalance)){
+        holderBalance[event.data.from] = BigNumber.from(0);
+      }
+      if (!(event.data.to in holderBalance)){
+        holderBalance[event.data.to] = BigNumber.from(0);
+      }
+      holderBalance[event.data.from] = holderBalance[event.data.from].sub(event.data.value);
+      holderBalance[event.data.to] = holderBalance[event.data.to].add(event.data.value);
     })
+    console.log(holderBalance);
   }
 
   return (
