@@ -1,16 +1,22 @@
-import { useContract, useTokenDrop } from "@thirdweb-dev/react";
 import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
 import { getAppControllers } from "../controllers";
 import { IBalanceData } from "../controllers/wallet";
 
+export interface IHolderBalanceInfo {
+  balance: BigNumber;
+  power: BigNumber;
+  share?: {tokenAddress:string | undefined, value: BigNumber}[];
+}
+
 export const TokenDistribute = () => {
   const [clubTokenAddress, setClubTokenAddress] = useState("");
   const [contract, setContract] = useState({} as SmartContract);
   const [walletBalance, setWalletBalance] = useState([] as IBalanceData[]);
-  const [holderBalance, setHolderBalance] = useState({} as {[k: string]: {balance: BigNumber, power: BigNumber}});
+  const [holderBalance, setHolderBalance] = useState({} as {[k: string]: IHolderBalanceInfo});
   const [tokenSupply, setTokenSupply] = useState(0);
+  // Multiplying factor used to calculate claimPower and member's share on the tokens in the club wallet
   const mulFactor = BigNumber.from("1000000");
 
   useEffect(() => {
@@ -31,8 +37,13 @@ export const TokenDistribute = () => {
     fetchContract();
   }, [clubTokenAddress]);
 
+  const getWalletBalance = async () => {
+    const balance = await getAppControllers().wallet.getAllBalance()
+    setWalletBalance(balance);
+  }
+
   const getAllHolder = async () => {
-    let _holderBalance: {[k: string]: {balance: BigNumber, power: BigNumber}} = {};
+    let _holderBalance: {[k: string]: IHolderBalanceInfo} = {};
 
     // Fetch all the events related to this club token contract
     const events = await contract.events.getAllEvents();
@@ -62,11 +73,6 @@ export const TokenDistribute = () => {
     setHolderBalance(_holderBalance);
   }
 
-  const getWalletBalance = async () => {
-    const balance = await getAppControllers().wallet.getAllBalance()
-    setWalletBalance(balance);
-  }
-
   const getClaimPower = async () => {
     const totalSupply = await contract.erc20.totalSupply();
     let _holderBalance = holderBalance;
@@ -79,11 +85,32 @@ export const TokenDistribute = () => {
     setHolderBalance(_holderBalance);
   }
 
+  const distributeToken = async (address: string) => {
+    const power = holderBalance[address].power;
+    let _distribution:{tokenAddress: string | undefined, value: BigNumber}[] = [];
+    walletBalance.forEach((token) => {
+      const share = BigNumber.from(token.balance).mul(power).div(mulFactor);
+      _distribution.push({tokenAddress:token.token_address, value:share});
+    })
+    return _distribution;
+  }
+
+  const claimToken = async () => {
+    await getAllHolder();
+    await getClaimPower();
+    let _holderBalance = holderBalance;
+    Object.entries(_holderBalance).forEach(async ([address, value]) => {
+      const distribution = await distributeToken(address);
+      _holderBalance[address].share = distribution;
+    })
+    setHolderBalance(_holderBalance);
+  }
+
   return (
     <>
       <p>Token Distribute</p>
       <button onClick={() => getAllHolder()}>Get all token holders</button>
-      <button onClick={() => getClaimPower()}>See claim power</button>
+      <button onClick={() => claimToken()}>See claim power</button>
     </>
   );
 };
