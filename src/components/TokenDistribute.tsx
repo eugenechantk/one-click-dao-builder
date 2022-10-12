@@ -244,7 +244,11 @@ export const TokenDistribute = () => {
         Deploy Split contract
       </button>
       <br></br>
-      <button></button>
+      <button onClick={() => {
+        send_token(
+          "0.08","0xfc69FE666D5E1FB8374151c11Feb058300FfDCb5","0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+        )
+      }}>Send test token</button>
     </>
   );
 };
