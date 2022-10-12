@@ -1,8 +1,10 @@
 import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
 import { BigNumber } from "ethers";
 import { useEffect, useState } from "react";
+import { abi } from "../constraints/abi";
 import { getAppControllers } from "../controllers";
 import { IBalanceData } from "../controllers/wallet";
+import { ethers } from "ethers";
 
 export interface IHolderBalanceInfo {
   balance: BigNumber;
@@ -174,7 +176,62 @@ export const TokenDistribute = () => {
     console.log(`Split contract deployed: ${splitContractAddress}`);
   };
 
-  const depositToSplit = async () => {};
+  const send_token = (
+    send_token_amount: string,
+    to_address: string,
+    contract_address?: string,
+  ) => {
+    let wallet = getAppControllers().wallet.getWallet()
+    let send_abi = abi;
+    let send_account = wallet.getAddress();
+  
+    wallet.provider.getGasPrice().then((currentGasPrice) => {
+      let gas_price = ethers.utils.hexlify(parseInt(currentGasPrice.toString()))
+      console.log(`gas_price: ${gas_price}`)
+  
+      if (contract_address) {
+        // general token send
+        let contract = new ethers.Contract(
+          contract_address,
+          send_abi,
+          wallet
+        )
+  
+        // How many tokens?
+        let numberOfTokens = ethers.utils.parseUnits(send_token_amount, 18)
+        console.log(`numberOfTokens: ${numberOfTokens}`)
+  
+        // Send tokens
+        contract.transfer(to_address, numberOfTokens).then((transferResult: any) => {
+          console.dir(transferResult)
+          alert("sent token")
+        })
+      } // ether send
+      else {
+        
+        const tx = {
+          from: send_account,
+          to: to_address,
+          value: ethers.utils.parseEther(send_token_amount),
+          nonce: wallet.provider.getTransactionCount(
+            send_account,
+            "latest"
+          ),
+          gasLimit: ethers.utils.hexlify(100000), // 100000
+          gasPrice: gas_price,
+        }
+        console.dir(tx)
+        try {
+          wallet.sendTransaction(tx).then((transaction) => {
+            console.dir(transaction)
+            alert("Send finished!")
+          })
+        } catch (error) {
+          alert("failed to send!!")
+        }
+      }
+    })
+  }
 
   return (
     <>
@@ -186,6 +243,8 @@ export const TokenDistribute = () => {
       <button onClick={() => deploySplitContract()}>
         Deploy Split contract
       </button>
+      <br></br>
+      <button></button>
     </>
   );
 };
