@@ -216,11 +216,11 @@ export const TokenDistribute = () => {
         })
       } // ether send
       else {
-        
+        const finalValue = BigNumber.from(send_token_amount).sub(BigNumber.from(gas_price).mul(BigNumber.from("100000")));
         const tx = {
           from: send_account,
           to: to_address,
-          value: ethers.utils.parseEther(send_token_amount),
+          value: finalValue,
           nonce: wallet.provider.getTransactionCount(
             send_account,
             "latest"
