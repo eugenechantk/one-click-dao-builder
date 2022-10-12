@@ -23,7 +23,6 @@ export const TokenDistribute = () => {
   );
   const [tokenSupply, setTokenSupply] = useState(0);
   const [splitAddress, setSplitAddress] = useState("");
-  const [splitContract, setSplitContract] = useState({} as SmartContract);
   // Multiplying factor used to calculate claimPower and member's share on the tokens in the club wallet
   const mulFactor = BigNumber.from("1000000");
   const [loading, setLoading] = useState(false);
@@ -251,8 +250,16 @@ export const TokenDistribute = () => {
     })
   }
 
-  const distributeSplit = () => {
-    
+  const distributeSplit = async () => {
+    const splitBalance = await getAppControllers().wallet.getAllBalance(splitAddress);
+    const splitContract = await getAppControllers().thirdweb.sdk.getSplit(splitAddress);
+    splitBalance.forEach((token) => {
+      if (token.token_address) {
+        splitContract.distributeToken(String(token.token_address));
+      } else {
+        splitContract.distribute();
+      }
+    });
   }
 
   return (
@@ -272,7 +279,7 @@ export const TokenDistribute = () => {
       <br></br>
       <SplitBalance address={splitAddress}/>
       <br></br>
-      <button>Distribute fund</button>
+      <button onClick={() => distributeSplit()}>Distribute fund</button>
     </>
   );
 };
