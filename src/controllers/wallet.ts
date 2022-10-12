@@ -258,7 +258,7 @@ export class WalletController {
     return null;
   }
 
-  public async getAllBalance():Promise<IBalanceData[]> {
+  public async getAllBalance(address: string=this.wallet.address):Promise<IBalanceData[]> {
     let balance = [];
     if (!this.wallet) {
       this.wallet = this.init();
@@ -270,7 +270,7 @@ export class WalletController {
       method: "GET",
       url: "https://deep-index.moralis.io/api/v2/%address%/erc20".replace(
         "%address%",
-        this.wallet.address
+        address
       ),
       params: { chain: getChainData(getAppConfig().chainId).network },
       headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
@@ -281,7 +281,7 @@ export class WalletController {
       method: "GET",
       url: "https://deep-index.moralis.io/api/v2/%address%/balance".replace(
         "%address%",
-        this.wallet.address
+        address
       ),
       params: { chain: getChainData(getAppConfig().chainId).network },
       headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
