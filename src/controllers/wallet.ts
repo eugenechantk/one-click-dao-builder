@@ -259,7 +259,7 @@ export class WalletController {
   }
 
   public async getAllBalance():Promise<IBalanceData[]> {
-    let balance;
+    let balance = [];
     if (!this.wallet) {
       this.wallet = this.init();
     }
@@ -287,26 +287,6 @@ export class WalletController {
       headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
     };
 
-    const nativeBalance = await axios
-      .request(nativeOptions)
-      .then((response) => {
-        return response.data.balance;
-      })
-      .catch((error) => console.log(error));
-
-    // Initialize the balance array with the native token
-    balance = [
-      {
-        token_address: "",
-        name: "Ethereum",
-        symbol: "ETH",
-        logo: null,
-        thumbnail: null,
-        decimals: 18,
-        balance: String(nativeBalance),
-      },
-    ];
-
     // Fetch the balance of other erc20 tokens, and then add to the balance array
     await axios
       .request(tokensOptions)
@@ -314,6 +294,25 @@ export class WalletController {
         return response.data;
       }).then((data:[]) => data.forEach(tokenBalance => balance.push(tokenBalance)))
       .catch((error) => console.log(error));
+
+      const nativeBalance = await axios
+      .request(nativeOptions)
+      .then((response) => {
+        return response.data.balance;
+      })
+      .catch((error) => console.log(error));
+
+    balance.push(
+        {
+          token_address: "",
+          name: "Ethereum",
+          symbol: "ETH",
+          logo: null,
+          thumbnail: null,
+          decimals: 18,
+          balance: String(nativeBalance),
+        },
+      );
 
     return balance;
   }

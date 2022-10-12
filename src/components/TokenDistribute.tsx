@@ -5,6 +5,7 @@ import { abi } from "../constraints/abi";
 import { getAppControllers } from "../controllers";
 import { IBalanceData } from "../controllers/wallet";
 import { ethers } from "ethers";
+import { local, setLocal } from "../helpers/local";
 
 export interface IHolderBalanceInfo {
   balance: BigNumber;
@@ -20,6 +21,8 @@ export const TokenDistribute = () => {
     {} as { [k: string]: IHolderBalanceInfo }
   );
   const [tokenSupply, setTokenSupply] = useState(0);
+  const [splitAddress, setSplitAddress] = useState("");
+  const [splitContract, setSplitContract] = useState({} as SmartContract);
   // Multiplying factor used to calculate claimPower and member's share on the tokens in the club wallet
   const mulFactor = BigNumber.from("1000000");
   const [loading, setLoading] = useState(false);
@@ -34,6 +37,9 @@ export const TokenDistribute = () => {
         });
     fetchAddress();
     getWalletBalance();
+    if (localStorage.getItem("split_contract_address")){
+      setSplitAddress(String(localStorage.getItem("split_contract_address")).replace(/['"]+/g, ""));
+    }
   }, []);
 
   useEffect(() => {
@@ -173,7 +179,9 @@ export const TokenDistribute = () => {
         name: `${contractName} Split`,
         recipients: _recipient,
       });
-    console.log(`Split contract deployed: ${splitContractAddress}`);
+    
+    setLocal("split_contract_address", splitContractAddress);
+    setSplitAddress(splitContractAddress);
   };
 
   const send_token = (
@@ -198,7 +206,7 @@ export const TokenDistribute = () => {
         )
   
         // How many tokens?
-        let numberOfTokens = ethers.utils.parseUnits(send_token_amount, 18)
+        let numberOfTokens = BigNumber.from(send_token_amount)
         console.log(`numberOfTokens: ${numberOfTokens}`)
   
         // Send tokens
@@ -233,6 +241,15 @@ export const TokenDistribute = () => {
     })
   }
 
+  const sendAllToSplit = () => {
+    if (!splitAddress) {
+      return
+    }
+    walletBalance.forEach((token) => {
+      send_token(String(token.balance), splitAddress, String(token.token_address));
+    })
+  }
+
   return (
     <>
       <p>Token Distribute</p>
@@ -243,12 +260,9 @@ export const TokenDistribute = () => {
       <button onClick={() => deploySplitContract()}>
         Deploy Split contract
       </button>
+      <p>Split Contract Address: {splitAddress}</p>
       <br></br>
-      <button onClick={() => {
-        send_token(
-          "0.08","0xfc69FE666D5E1FB8374151c11Feb058300FfDCb5","0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
-        )
-      }}>Send test token</button>
+      <button onClick={() => sendAllToSplit()}>Send all balance to split contract</button>
     </>
   );
 };
