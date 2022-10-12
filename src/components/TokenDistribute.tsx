@@ -108,9 +108,9 @@ export const TokenDistribute = () => {
     return _holderBalance;
   };
 
-  const getTokenShareBalance = (
-    _holderBalance: { [k: string]: IHolderBalanceInfo }
-  ) => {
+  const getTokenShareBalance = (_holderBalance: {
+    [k: string]: IHolderBalanceInfo;
+  }) => {
     Object.entries(_holderBalance).forEach(([address, value]) => {
       const power = _holderBalance[address].power;
       let _distribution: {
@@ -128,17 +128,64 @@ export const TokenDistribute = () => {
 
   const claimToken = async () => {
     setLoading(true);
+    // Need to store the result of each async function as its own variable and cascade down the flow because useState is async, and the state cannot be accessed immediately for the next function
     const _holderBalance = await getAllHolder();
     const _claimPowerBalance = await getClaimPower(_holderBalance);
-    const _distibutionBalance = await getTokenShareBalance(_claimPowerBalance);
+    const _distibutionBalance = getTokenShareBalance(_claimPowerBalance);
     setHolderBalance(_distibutionBalance);
     setLoading(false);
   };
 
+  const deploySplitContract = async () => {
+    const _holderBalance = holderBalance;
+    let _recipient: { address: string; sharesBps: number }[] = [];
+
+    // For each holder of the token, populate the address and share percent in the format of the split contract
+    Object.entries(_holderBalance).forEach(([address, value]) => {
+      const { power } = value;
+      let options: { address: string; sharesBps: number } = {
+        address: "",
+        sharesBps: 0,
+      };
+      options.address = address;
+      options.sharesBps =
+        power.div(mulFactor.div(BigNumber.from("100"))).toNumber() * 100;
+      _recipient.push(options);
+    });
+
+    // Check if the total share is 100% (or 10000); if not, distribute remaining fund to the club token address
+    const totalShare = _recipient.reduce((accumulator, recipient) => {
+      return (accumulator += recipient.sharesBps);
+    }, 0);
+    if (totalShare !== 10000) {
+      _recipient.push({
+        address: clubTokenAddress,
+        sharesBps: 10000 - totalShare,
+      });
+    }
+
+    // Deploy the split contract with that share structure in _recipient
+    const contractName = await (await contract.erc20.get()).name;
+    const splitContractAddress =
+      await getAppControllers().thirdweb.sdk.deployer.deploySplit({
+        name: `${contractName} Split`,
+        recipients: _recipient,
+      });
+    console.log(`Split contract deployed: ${splitContractAddress}`);
+  };
+
+  const depositToSplit = async () => {};
+
   return (
     <>
       <p>Token Distribute</p>
-      <button onClick={() => claimToken()} disabled={loading}>See claim power</button>
+      <button onClick={() => claimToken()} disabled={loading}>
+        See claim power
+      </button>
+      <br></br>
+      <button onClick={() => deploySplitContract()}>
+        Deploy Split contract
+      </button>
     </>
   );
 };
