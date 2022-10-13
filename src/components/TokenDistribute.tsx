@@ -16,7 +16,6 @@ export interface IHolderBalanceInfo {
 
 export const TokenDistribute = () => {
   const [clubTokenAddress, setClubTokenAddress] = useState("");
-  const [contract, setContract] = useState({} as SmartContract);
   const [walletBalance, setWalletBalance] = useState([] as IBalanceData[]);
   const [holderBalance, setHolderBalance] = useState(
     {} as { [k: string]: IHolderBalanceInfo }
@@ -37,21 +36,15 @@ export const TokenDistribute = () => {
         });
     fetchAddress();
     getWalletBalance();
-    if (localStorage.getItem("split_contract_address")){
-      setSplitAddress(String(localStorage.getItem("split_contract_address")).replace(/['"]+/g, ""));
+    if (localStorage.getItem("split_contract_address")) {
+      setSplitAddress(
+        String(localStorage.getItem("split_contract_address")).replace(
+          /['"]+/g,
+          ""
+        )
+      );
     }
   }, []);
-
-  useEffect(() => {
-    const fetchContract = async () => {
-      await getAppControllers()
-        .thirdweb.sdk.getContract(clubTokenAddress)
-        .then((contract) => {
-          setContract(contract);
-        });
-    };
-    fetchContract();
-  }, [clubTokenAddress]);
 
   const getWalletBalance = async () => {
     const balance = await getAppControllers().wallet.getAllBalance();
@@ -61,6 +54,9 @@ export const TokenDistribute = () => {
   const getAllHolder = async () => {
     let _holderBalance: { [k: string]: IHolderBalanceInfo } = {};
 
+    const contract = await getAppControllers().thirdweb.sdk.getContract(
+      clubTokenAddress
+    );
     // Fetch all the events related to this club token contract
     const events = await contract.events.getAllEvents();
     // Return only transfer events
@@ -104,6 +100,9 @@ export const TokenDistribute = () => {
   const getClaimPower = async (_holderBalance: {
     [k: string]: IHolderBalanceInfo;
   }) => {
+    const contract = await getAppControllers().thirdweb.sdk.getContract(
+      clubTokenAddress
+    );
     const totalSupply = await contract.erc20.totalSupply();
     Object.entries(_holderBalance).forEach(([address, value]) => {
       const { balance } = value;
@@ -167,100 +166,128 @@ export const TokenDistribute = () => {
     }, 0);
     if (totalShare !== 10000) {
       _recipient.push({
-        address: clubTokenAddress,
+        address: getAppControllers().wallet.getAddress(),
         sharesBps: 10000 - totalShare,
       });
     }
 
     // Deploy the split contract with that share structure in _recipient
-    const contractName = await (await contract.erc20.get()).name;
+    const contractName = await await getAppControllers()
+      .thirdweb.sdk.getContract(clubTokenAddress)
+      .then((contract) => {
+        return contract.erc20.get().then((metadata) => {
+          return metadata.name;
+        });
+      });
     const splitContractAddress =
       await getAppControllers().thirdweb.sdk.deployer.deploySplit({
         name: `${contractName} Split`,
         recipients: _recipient,
       });
-    
+
     setLocal("split_contract_address", splitContractAddress);
     setSplitAddress(splitContractAddress);
   };
 
-  const send_token = (
+  const send_token = async (
     send_token_amount: string,
     to_address: string,
     contract_address?: string,
+    _gasForDistribute?: number
   ) => {
-    let wallet = getAppControllers().wallet.getWallet()
+    let wallet = getAppControllers().wallet.getWallet();
     let send_abi = abi;
     let send_account = wallet.getAddress();
-  
-    wallet.provider.getGasPrice().then((currentGasPrice) => {
-      let gas_price = ethers.utils.hexlify(parseInt(currentGasPrice.toString()))
-      console.log(`gas_price: ${gas_price}`)
-  
-      if (contract_address) {
-        // general token send
-        let contract = new ethers.Contract(
-          contract_address,
-          send_abi,
-          wallet
-        )
-  
-        // How many tokens?
-        let numberOfTokens = BigNumber.from(send_token_amount)
-        console.log(`numberOfTokens: ${numberOfTokens}`)
-  
-        // Send tokens
-        contract.transfer(to_address, numberOfTokens).then((transferResult: any) => {
-          console.dir(transferResult)
-          alert("sent token")
-        })
-      } // ether send
-      else {
-        //const finalValue = BigNumber.from(send_token_amount).sub(BigNumber.from(gas_price).mul(BigNumber.from("100000")));
-        const tx = {
-          from: send_account,
-          to: to_address,
-          value: BigNumber.from(send_token_amount),
-          nonce: wallet.provider.getTransactionCount(
-            send_account,
-            "latest"
-          ),
-          gasLimit: ethers.utils.hexlify(100000), // 100000
-          gasPrice: gas_price,
-        }
-        console.dir(tx)
-        try {
-          wallet.sendTransaction(tx).then((transaction) => {
-            console.dir(transaction)
-            alert("Send finished!")
-          })
-        } catch (error) {
-          alert("failed to send!!")
-        }
-      }
-    })
-  }
+    // Base ethereum transfer gas of 21000 + contract execution gas (usually total up to 27xxx)
+    const _gasLimit = ethers.utils.hexlify(37000);
 
-  const sendAllToSplit = () => {
-    if (!splitAddress) {
-      return
+    const currentGasPrice = await wallet.provider.getGasPrice();
+    let gas_price = ethers.utils.hexlify(parseInt(currentGasPrice.toString()));
+    console.log(`gas_price: ${gas_price}`);
+
+    if (contract_address) {
+      // general token send
+      let contract = new ethers.Contract(contract_address, send_abi, wallet);
+
+      // How many tokens?
+      let numberOfTokens = BigNumber.from(send_token_amount);
+      console.log(`numberOfTokens: ${numberOfTokens}`);
+
+      // Send the tokens
+      try {
+        await contract
+          .transfer(to_address, numberOfTokens)
+          .then((transferResult: any) => {
+            console.dir(transferResult);
+            alert("sent token");
+          });
+      } catch (err) {
+        console.log(err);
+        alert(`failed to send token ${contract_address}`);
+      }
+    } // ether send
+    else {
+      const finalValue = BigNumber.from(send_token_amount)
+        .sub(BigNumber.from(gas_price).mul(BigNumber.from(_gasLimit)))
+        .sub(BigNumber.from(gas_price).mul(BigNumber.from(_gasForDistribute)));
+      const tx = {
+        from: send_account,
+        to: to_address,
+        value: finalValue,
+        nonce: wallet.provider.getTransactionCount(send_account, "latest"),
+        gasLimit: _gasLimit, // 100000
+        gasPrice: gas_price,
+      };
+      console.dir(tx);
+      try {
+        await wallet.sendTransaction(tx).then((transaction) => {
+          console.dir(transaction);
+          alert("Send ETH finished!");
+        });
+      } catch (error) {
+        console.log(error);
+        alert("failed to send ETH!!");
+      }
     }
-    walletBalance.forEach((token) => {
-      send_token(String(token.balance), splitAddress, String(token.token_address));
-    })
-  }
+  };
+
+  const sendAllToSplit = async () => {
+    if (!splitAddress) {
+      return;
+    }
+    const _walletBalance = await getAppControllers().wallet.getAllBalance();
+    const _gasForDistribute = _walletBalance.length * 300000;
+    for (let token of _walletBalance) {
+      await send_token(
+        String(token.balance),
+        splitAddress,
+        String(token.token_address),
+        _gasForDistribute
+      );
+    }
+  };
 
   const distributeSplit = async () => {
-    const splitBalance = await getAppControllers().wallet.getAllBalance(splitAddress);
-    const splitContract = await getAppControllers().thirdweb.sdk.getSplit(splitAddress);
-    splitBalance.forEach((token) => {
+    const splitBalance = await getAppControllers().wallet.getAllBalance(
+      splitAddress
+    );
+    const splitContract = await getAppControllers().thirdweb.sdk.getSplit(
+      splitAddress
+    );
+    for (let token of splitBalance) {
       if (token.token_address) {
-        splitContract.distributeToken(String(token.token_address));
+        await splitContract
+          .distributeToken(String(token.token_address))
+          .then((result) => {
+            console.log(result);
+          });
       } else {
-        splitContract.distribute();
+        splitContract.distribute().then((result) => {
+          console.log(result);
+        });
       }
-    });
-  }
+    }
+  };
 
   return (
     <>
@@ -274,10 +301,12 @@ export const TokenDistribute = () => {
       </button>
       <p>Split Contract Address: {splitAddress}</p>
       <br></br>
-      <button onClick={() => sendAllToSplit()}>Send all balance to split contract</button>
+      <button onClick={() => sendAllToSplit()}>
+        Send all balance to split contract
+      </button>
       <br></br>
       <br></br>
-      <SplitBalance address={splitAddress}/>
+      <SplitBalance address={splitAddress} />
       <br></br>
       <button onClick={() => distributeSplit()}>Distribute fund</button>
     </>
