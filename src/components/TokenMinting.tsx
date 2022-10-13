@@ -19,8 +19,10 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
   const [loading, setLoading] = useState(false);
   const [amountToClaim, setAmountToClaim] = useState("");
   const clubTokenContract = useContract(dropTokenAddress);
+  const [claimTokenLoading, setClaimTokenLoading] = useState(false);
 
   const deployClubTokenContract = async (): Promise<void> => {
+    setLoading(true);
     const dropTokenAddress =
       await getAppControllers().thirdweb.getClubTokenAddress(
         nameInput,
@@ -30,13 +32,16 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
     setDropTokenAddress(formattedAddress);
     // addTokenController(formattedAddress);
     // getAppControllers().token?.init(formattedAddress);
+    setLoading(false);
   };
 
   const claimClubToken = async () => {
+    setClaimTokenLoading(true);
     const claimResult = await clubTokenContract.contract?.erc20.claim(
       amountToClaim
     );
     console.log(claimResult);
+    setClaimTokenLoading(false);
   };
 
   useEffect (() => {
@@ -88,15 +93,13 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
               placeholder="Enter amount to claim"
               onChange={(e) => setAmountToClaim(e.target.value)}
             />
-            <button onClick={async () => await claimClubToken()}>
+            <button onClick={async () => await claimClubToken()} disabled={claimTokenLoading}>
               Claim club tokens
             </button>
             <br></br>
             <button
               onClick={() =>
-                getAppControllers().thirdweb.setClaimCondition([
-                  { startTime: new Date(), price: 0.01 },
-                ])
+                getAppControllers().thirdweb.setClaimCondition()
               }
             >
               Set Claim Condition
