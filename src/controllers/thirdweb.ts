@@ -7,10 +7,10 @@ import { ethers } from "ethers";
 import { getAppControllers } from ".";
 import { local, setLocal } from "../helpers/local";
 
-const initialClaimCondition: ClaimConditionInput = {
+const initialClaimCondition: ClaimConditionInput[] = [{
   startTime: new Date(),
-  price: 0.01,
-};
+  price: 0.0001,
+}];
 
 export class ThirdWebController {
   public sdk: ThirdwebSDK;
@@ -66,28 +66,27 @@ export class ThirdWebController {
       }
       this.clubTokenAddress = contractAddress;
     }
-    if (!this.claimCondition?.length) {
-      try {
-        await this.setClaimCondition([initialClaimCondition]);
-      } catch (error) {
-        console.log(`Error in setting claim condition: `, error);
-      }
-    }
+    // if (!this.claimCondition?.length) {
+    //   try {
+    //     await this.setClaimCondition([initialClaimCondition]);
+    //   } catch (error) {
+    //     console.log(`Error in setting claim condition: `, error);
+    //   }
+    // }
     return this.clubTokenAddress;
   }
 
   // Setting the claim condition, inc. start date, price, which cryptocurrency to charge
   // ARG - condition: ClaimConditionInput[] -- the claim condition with various parameters to set the start date, price, maxQuantity, currency to claim, etc.
   public async setClaimCondition(
-    condition: ClaimConditionInput[]
+    conditions: ClaimConditionInput[]=initialClaimCondition
   ): Promise<void> {
     const formattedAddress = this.clubTokenAddress.replace(/['"]+/g, "");
-    console.log(formattedAddress);
-    const clubTokenContract = await this.sdk.getTokenDrop(formattedAddress);
-    const transactionResult = await clubTokenContract.claimConditions.set(
-      condition
+    console.log(`Setting claim condition for club token with this address: ${formattedAddress}`);
+    const clubTokenContract = await this.sdk.getContract(formattedAddress);
+    const transactionResult = await clubTokenContract.erc20.claimConditions.set(conditions
     );
-    this.claimCondition = condition;
+    this.claimCondition = conditions;
     console.log(transactionResult);
   }
 
