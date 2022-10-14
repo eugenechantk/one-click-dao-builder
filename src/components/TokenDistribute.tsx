@@ -256,7 +256,7 @@ export const TokenDistribute = () => {
       return;
     }
     const _walletBalance = await getAppControllers().wallet.getAllBalance();
-    const _gasForDistribute = _walletBalance.length * 300000;
+    const _gasForDistribute = _walletBalance.length * 280000;
     for (let token of _walletBalance) {
       await send_token(
         String(token.balance),
