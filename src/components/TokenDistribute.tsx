@@ -156,7 +156,7 @@ export const TokenDistribute = () => {
       };
       options.address = address;
       options.sharesBps =
-        power.div(mulFactor.div(BigNumber.from("100"))).toNumber() * 100;
+        power.div(mulFactor).toNumber();
       _recipient.push(options);
     });
 
