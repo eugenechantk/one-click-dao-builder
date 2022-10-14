@@ -1,5 +1,5 @@
 import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
-import { BigNumber } from "ethers";
+import { BigNumber, providers, Transaction } from "ethers";
 import { useEffect, useState } from "react";
 import { abi } from "../constraints/abi";
 import { getAppControllers } from "../controllers";
@@ -25,6 +25,7 @@ export const TokenDistribute = () => {
   // Multiplying factor used to calculate claimPower and member's share on the tokens in the club wallet
   const mulFactor = BigNumber.from("1000000");
   const [loading, setLoading] = useState(false);
+  // let nounceOffset = 0;
 
   useEffect(() => {
     const fetchAddress = async () =>
@@ -156,10 +157,11 @@ export const TokenDistribute = () => {
       };
       options.address = address;
       options.sharesBps =
-        power.div(mulFactor).toNumber();
+        power.div(mulFactor.div(BigNumber.from("10000"))).toNumber();
       _recipient.push(options);
     });
 
+    console.log("recipients:", {_recipient});
     // Check if the total share is 100% (or 10000); if not, distribute remaining fund to the club token address
     const totalShare = _recipient.reduce((accumulator, recipient) => {
       return (accumulator += recipient.sharesBps);
@@ -190,8 +192,8 @@ export const TokenDistribute = () => {
   };
 
   const send_token = async (
-    send_token_amount: string,
     to_address: string,
+    send_token_amount?: string,
     contract_address?: string,
     _gasForDistribute?: number
   ) => {
@@ -199,7 +201,7 @@ export const TokenDistribute = () => {
     let send_abi = abi;
     let send_account = wallet.getAddress();
     // Base ethereum transfer gas of 21000 + contract execution gas (usually total up to 27xxx)
-    const _gasLimit = ethers.utils.hexlify(37000);
+    const _gasLimit = ethers.utils.hexlify(50000);
 
     const currentGasPrice = await wallet.provider.getGasPrice();
     let gas_price = ethers.utils.hexlify(parseInt(currentGasPrice.toString()));
@@ -212,12 +214,15 @@ export const TokenDistribute = () => {
       // How many tokens?
       let numberOfTokens = BigNumber.from(send_token_amount);
       console.log(`numberOfTokens: ${numberOfTokens}`);
-
       // Send the tokens
       try {
         await contract
           .transfer(to_address, numberOfTokens)
-          .then((transferResult: any) => {
+          .then(async (transferResult: any) => {
+            // wait until the block is mined
+            await transferResult.wait()
+            // make sure the nounceOffset increases for each transaction
+            // nounceOffset++;
             console.dir(transferResult);
             alert("sent token");
           });
@@ -227,20 +232,25 @@ export const TokenDistribute = () => {
       }
     } // ether send
     else {
-      const finalValue = BigNumber.from(send_token_amount)
+      const _ethLeft = await wallet.provider.getBalance(wallet.address);
+      const _finalValue = _ethLeft
         .sub(BigNumber.from(gas_price).mul(BigNumber.from(_gasLimit)))
         .sub(BigNumber.from(gas_price).mul(BigNumber.from(_gasForDistribute)));
+      // make sure it does not return the same nounce even when transactions are called too close to each other
+      // const _nounce = await wallet.provider.getTransactionCount(send_account).then((nounce) => nounce + nounceOffset++)
       const tx = {
         from: send_account,
         to: to_address,
-        value: finalValue,
-        nonce: wallet.provider.getTransactionCount(send_account, "latest"),
-        gasLimit: _gasLimit, // 100000
+        value: _finalValue,
+        nonce: wallet.provider.getTransactionCount(send_account, 'latest'),
+        gasLimit: _gasLimit,
         gasPrice: gas_price,
       };
       console.dir(tx);
       try {
-        await wallet.sendTransaction(tx).then((transaction) => {
+        await wallet.sendTransaction(tx).then(async (transaction) => {
+          // wait until the block is mined
+          // await transaction.wait()
           console.dir(transaction);
           alert("Send ETH finished!");
         });
@@ -256,11 +266,12 @@ export const TokenDistribute = () => {
       return;
     }
     const _walletBalance = await getAppControllers().wallet.getAllBalance();
-    const _gasForDistribute = _walletBalance.length * 280000;
+    const _gasForDistribute = _walletBalance.length * 250000;
+    // const _gasForDistribute = 4 * 250000; // for testing only
     for (let token of _walletBalance) {
       await send_token(
-        String(token.balance),
         splitAddress,
+        String(token.balance),
         String(token.token_address),
         _gasForDistribute
       );
