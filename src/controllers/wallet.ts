@@ -317,6 +317,29 @@ export class WalletController {
 
     return balance;
   }
+
+  public getEthBalance = async (address: string=this.wallet.address) => {
+    const MORALIES_API_KEY = String(process.env.REACT_APP_MORALIS_KEY);
+    const nativeOptions = {
+      method: "GET",
+      url: "https://deep-index.moralis.io/api/v2/%address%/balance".replace(
+        "%address%",
+        address
+      ),
+      params: { chain: getChainData(getAppConfig().chainId).network },
+      headers: { accept: "application/json", "X-API-Key": MORALIES_API_KEY },
+    };
+    
+    const nativeBalance = await axios
+      .request(nativeOptions)
+      .then((response) => {
+        return response.data.balance;
+      })
+      .catch((error) => console.log(error));
+
+    return nativeBalance;
+
+  }
 }
 
 export function getWalletController() {
