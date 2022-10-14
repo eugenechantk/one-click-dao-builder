@@ -7,6 +7,7 @@ import { IBalanceData } from "../controllers/wallet";
 import { ethers } from "ethers";
 import { local, setLocal } from "../helpers/local";
 import { SplitBalance } from "./SplitContractBalance";
+import { formatEther } from "ethers/lib/utils";
 
 export interface IHolderBalanceInfo {
   balance: BigNumber;
@@ -145,7 +146,7 @@ export const TokenDistribute = () => {
   };
 
   const deploySplitContract = async () => {
-    const _holderBalance = holderBalance;
+    const _holderBalance:{[k: string]: IHolderBalanceInfo} = await getAllHolder();
     let _recipient: { address: string; sharesBps: number }[] = [];
 
     // For each holder of the token, populate the address and share percent in the format of the split contract
@@ -161,7 +162,6 @@ export const TokenDistribute = () => {
       _recipient.push(options);
     });
 
-    console.log("recipients:", {_recipient});
     // Check if the total share is 100% (or 10000); if not, distribute remaining fund to the club token address
     const totalShare = _recipient.reduce((accumulator, recipient) => {
       return (accumulator += recipient.sharesBps);
@@ -189,8 +189,20 @@ export const TokenDistribute = () => {
 
     setLocal("split_contract_address", splitContractAddress);
     setSplitAddress(splitContractAddress);
+
+    // burn club tokens
+    
   };
 
+  // function to burn all club tokens from token holders
+  const burnAllTokens = async () => {
+    const clubTokenContract = await getAppControllers().thirdweb.sdk.getTokenDrop(clubTokenAddress);
+    const _holderBalance = await getAllHolder();
+    Object.keys(_holderBalance).forEach(async (holder) => {
+      const _balance = formatEther(_holderBalance[holder].balance.toString())
+      await clubTokenContract.burnFrom(holder, _balance).then(result => console.log(result));
+    })
+  }
   const send_token = async (
     to_address: string,
     send_token_amount?: string,
@@ -285,6 +297,7 @@ export const TokenDistribute = () => {
     const splitContract = await getAppControllers().thirdweb.sdk.getSplit(
       splitAddress
     );
+    console.log(splitContract.getAddress());
     for (let token of splitBalance) {
       if (token.token_address) {
         await splitContract
@@ -293,7 +306,7 @@ export const TokenDistribute = () => {
             console.log(result);
           });
       } else {
-        splitContract.distribute().then((result) => {
+        await splitContract.distribute().then((result) => {
           console.log(result);
         });
       }
@@ -306,6 +319,8 @@ export const TokenDistribute = () => {
       <button onClick={() => claimToken()} disabled={loading}>
         See claim power
       </button>
+      <br></br>
+      <button onClick={() => burnAllTokens()}>Burn all club tokens</button>
       <br></br>
       <button onClick={() => deploySplitContract()}>
         Deploy Split contract

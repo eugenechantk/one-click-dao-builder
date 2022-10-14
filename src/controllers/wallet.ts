@@ -264,7 +264,6 @@ export class WalletController {
       this.wallet = this.init();
     }
     const MORALIES_API_KEY = String(process.env.REACT_APP_MORALIS_KEY);
-    console.log(`fetch all balance address: ${address}`);
 
     // Define the API options to get ERC20 token balance via Moralis
     const tokensOptions = {
