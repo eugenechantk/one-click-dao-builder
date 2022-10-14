@@ -67,7 +67,6 @@ export const TokenDistribute = () => {
     });
     // Reverse the transfer events, because the events are ordered by latest to earliest
     transferEvent.reverse();
-    console.log(transferEvent);
 
     // Function to populate the holderBalance dict
     transferEvent.forEach((event) => {
@@ -217,7 +216,6 @@ export const TokenDistribute = () => {
 
     const currentGasPrice = await wallet.provider.getGasPrice();
     let gas_price = ethers.utils.hexlify(parseInt(currentGasPrice.toString()));
-    console.log(`gas_price: ${gas_price}`);
 
     if (contract_address) {
       // general token send
@@ -225,7 +223,6 @@ export const TokenDistribute = () => {
 
       // How many tokens?
       let numberOfTokens = BigNumber.from(send_token_amount);
-      console.log(`numberOfTokens: ${numberOfTokens}`);
       // Send the tokens
       try {
         await contract
