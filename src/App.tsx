@@ -339,6 +339,7 @@ class App extends React.Component<{}> {
           >
             Show wallet
           </button>
+          <button onClick={() => magic.connect.disconnect().catch(e => console.log(e))}>Disconnect</button>
         </div>
         <hr></hr>
         <h4>User's wallet</h4>
