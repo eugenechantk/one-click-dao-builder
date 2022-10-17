@@ -4,7 +4,6 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import {
   ChainId,
-  ThirdwebProvider,
   ThirdwebSDKProvider,
 } from "@thirdweb-dev/react";
 import { Magic } from "magic-sdk";
@@ -16,9 +15,11 @@ import { getAppConfig } from "./config";
 // This is the chainId your dApp will work on.
 const activeChainId = ChainId.Goerli;
 
+const INFURA_KEY = String(process.env.REACT_APP_INFURA_PROJECT_ID);
+
 const MAGIC_API_KEY = String(process.env.REACT_APP_MAGIC_API_KEY);
 const customNodeOptions = {
-  rpcUrl: getChainData(getAppConfig().chainId).rpc_url, // your ethereum, polygon, or optimism mainnet/testnet rpc URL
+  rpcUrl: getChainData(getAppConfig().chainId).rpc_url,
   chainId: getChainData(getAppConfig().chainId).network_id,
 };
 
@@ -40,6 +41,10 @@ root.render(
       desiredChainId={activeChainId}
       provider={provider}
       signer={signer}
+      sdkOptions={{readonlySettings:{rpcUrl:"https://goerli.infura.io/v3/%API_KEY%".replace(
+        "%API_KEY%",
+        INFURA_KEY
+      ), chainId:5}}}
     >
       <App />
     </ThirdwebSDKProvider>
