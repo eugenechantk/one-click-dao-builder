@@ -10,7 +10,6 @@ import { UserWallet } from "./components/UserWallet";
 import { TokenMinting } from "./components/TokenMinting";
 import { ClubWallet } from "./components/ClubWallet";
 import { TokenDistribute } from "./components/TokenDistribute";
-import { magic, provider } from ".";
 
 export interface IAppState {
   loading: boolean;
@@ -319,28 +318,11 @@ class App extends React.Component<{}> {
     });
   };
 
-  public magicLogin = async () => {
-    await provider.send("eth_accounts", []);
-    const signer = await provider.getSigner();
-  }
-
   public render() {
     const { peerMeta, connected, requests, payload, address, userAddress } =
       this.state;
     return (
       <>
-        <div>
-          <p>Magic Connect</p>
-          <button onClick={() => this.magicLogin()}>login</button>
-          <button
-            onClick={() =>
-              magic.connect.showWallet().catch((e) => console.log(e))
-            }
-          >
-            Show wallet
-          </button>
-          <button onClick={() => magic.connect.disconnect().catch(e => console.log(e))}>Disconnect</button>
-        </div>
         <hr></hr>
         <h4>User's wallet</h4>
         {/* <ConnectWallet /> */}
