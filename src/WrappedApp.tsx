@@ -19,6 +19,10 @@ export const WrappedApp = (props: IWrappedAppProps) => {
   const [signer, setSigner] = useState(provider?.getSigner() as ethers.Signer | undefined);
   const activeChainId = ChainId.Goerli;
   const INFURA_KEY = String(process.env.REACT_APP_INFURA_PROJECT_ID);
+  const _rpcUrl = "https://goerli.infura.io/v3/%API_KEY%".replace(
+    "%API_KEY%",
+    INFURA_KEY
+  )
 
   const magicLogin = async () => {
     await provider?.send("eth_accounts", []);
@@ -54,10 +58,7 @@ export const WrappedApp = (props: IWrappedAppProps) => {
           signer={signer}
           sdkOptions={{
             readonlySettings: {
-              rpcUrl: "https://goerli.infura.io/v3/%API_KEY%".replace(
-                "%API_KEY%",
-                INFURA_KEY
-              ),
+              rpcUrl: _rpcUrl,
               chainId: 5,
             },
           }}

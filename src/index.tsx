@@ -24,7 +24,6 @@ const magic = new Magic(MAGIC_API_KEY, {
 const provider = new ethers.providers.Web3Provider(magic.rpcProvider);
 
 
-
 const container = document.getElementById("root");
 const root = createRoot(container!);
 root.render(
