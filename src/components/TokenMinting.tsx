@@ -2,8 +2,8 @@ import { ThirdWebController } from "../controllers/thirdweb";
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { useEffect, useState } from "react";
 import { getAppControllers } from "../controllers";
-import { useContract, UseContractResult } from "@thirdweb-dev/react";
-import { SmartContract } from "@thirdweb-dev/sdk/dist/declarations/src/evm/contracts/smart-contract";
+import { useContract } from "@thirdweb-dev/react";
+import { TokenDistribute } from "./TokenDistribute";
 
 export interface ITokenMintingFCProps {
   sdkController: ThirdWebController;
@@ -12,15 +12,17 @@ export interface ITokenMintingFCProps {
 }
 
 export const TokenMinting = (props: ITokenMintingFCProps) => {
-  const { sdkController, sdk, userAddress } = props;
+  const { userAddress } = props;
   const [nameInput, setNameInput] = useState("");
   const [symbolInput, setSymbolInput] = useState("");
-  const [dropTokenAddress, setDropTokenAddress] = useState(String(localStorage.getItem("club_token_address")).replace(/['"]+/g, "") || "");
+  const [dropTokenAddress, setDropTokenAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [amountToClaim, setAmountToClaim] = useState("");
   const clubTokenContract = useContract(dropTokenAddress);
+  const [claimTokenLoading, setClaimTokenLoading] = useState(false);
 
   const deployClubTokenContract = async (): Promise<void> => {
+    setLoading(true);
     const dropTokenAddress =
       await getAppControllers().thirdweb.getClubTokenAddress(
         nameInput,
@@ -28,14 +30,25 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
       );
     const formattedAddress = dropTokenAddress.replace(/['"]+/g, "");
     setDropTokenAddress(formattedAddress);
+    // addTokenController(formattedAddress);
+    // getAppControllers().token?.init(formattedAddress);
+    setLoading(false);
   };
 
   const claimClubToken = async () => {
+    setClaimTokenLoading(true);
     const claimResult = await clubTokenContract.contract?.erc20.claim(
       amountToClaim
     );
     console.log(claimResult);
+    setClaimTokenLoading(false);
   };
+
+  useEffect (() => {
+    if (localStorage.getItem("club_token_address")) {
+      setDropTokenAddress(String(localStorage.getItem("club_token_address")).replace(/['"]+/g, ""))
+    }
+  }, []);
 
   return (
     <>
@@ -80,15 +93,13 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
               placeholder="Enter amount to claim"
               onChange={(e) => setAmountToClaim(e.target.value)}
             />
-            <button onClick={async () => await claimClubToken()}>
+            <button onClick={async () => await claimClubToken()} disabled={claimTokenLoading}>
               Claim club tokens
             </button>
             <br></br>
             <button
               onClick={() =>
-                getAppControllers().thirdweb.setClaimCondition([
-                  { startTime: new Date(), price: 0.01 },
-                ])
+                getAppControllers().thirdweb.setClaimCondition()
               }
             >
               Set Claim Condition
@@ -102,6 +113,9 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
               Remove Claim Condition
             </button>
           </div>
+          <br></br>
+          <br></br>
+          <TokenDistribute />
         </>
       )}
     </>
