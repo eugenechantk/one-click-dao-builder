@@ -17,6 +17,7 @@ export const WrappedApp = (props: IWrappedAppProps) => {
   // If the user has previously logged in, the Magic Connect provider should have stored the user's signer, and can return the signer
   // If the user has not logged in previously, it will return nothing
   const [signer, setSigner] = useState(provider?.getSigner() as ethers.Signer | undefined);
+  const [userInfo, setUserInfo] = useState({} as any);
   const activeChainId = ChainId.Goerli;
   const INFURA_KEY = String(process.env.REACT_APP_INFURA_PROJECT_ID);
   const _rpcUrl = "https://goerli.infura.io/v3/54a166cf013f4904933008024da4f925";
@@ -28,7 +29,7 @@ export const WrappedApp = (props: IWrappedAppProps) => {
     // If getSigner() returns a signer, that means a wallet is connected and no need to show login modal
     const _signer = await provider?.getSigner();
     const _userInfo = await props.magic.connect.requestUserInfo();
-    console.log(_userInfo);
+    setUserInfo(_userInfo);
     setSigner(_signer);
   };
 
