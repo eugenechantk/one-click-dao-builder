@@ -27,6 +27,8 @@ export const WrappedApp = (props: IWrappedAppProps) => {
     // If getSigner() does not return a signer, then that means no wallet is authenticated, and the login modal will pop up
     // If getSigner() returns a signer, that means a wallet is connected and no need to show login modal
     const _signer = await provider?.getSigner();
+    const _userInfo = await props.magic.connect.requestUserInfo();
+    console.log(_userInfo);
     setSigner(_signer);
   };
 
@@ -38,7 +40,7 @@ export const WrappedApp = (props: IWrappedAppProps) => {
     <>
       <div>
         <p>Magic Connect</p>
-        <button onClick={() => magicLogin()}>login</button>
+        <button onClick={() => magicLogin()}>Login</button>
         <button
           onClick={() =>
             magic.connect.showWallet().catch((e) => console.log(e))
