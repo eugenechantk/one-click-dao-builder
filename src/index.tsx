@@ -7,6 +7,8 @@ import { getChainData } from "./helpers/utilities";
 import { ethers } from "ethers";
 import { getAppConfig } from "./config";
 import { WrappedApp } from "./WrappedApp";
+import SuperTokens, { SuperTokensWrapper } from "supertokens-auth-react";
+import Session from "supertokens-auth-react/recipe/session";
 
 
 const MAGIC_API_KEY = String(process.env.REACT_APP_MAGIC_API_KEY);
@@ -22,6 +24,27 @@ const magic = new Magic(MAGIC_API_KEY, {
 
 // @ts-ignore
 const provider = new ethers.providers.Web3Provider(magic.rpcProvider);
+
+
+const port = process.env.APP_PORT || 3000;
+export const websiteDomain =
+  process.env.APP_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  `http://localhost:${port}`;
+const apiBasePath = "/api/auth/";
+SuperTokens.init({
+    appInfo: {
+        // learn more about this on https://supertokens.com/docs/session/appinfo
+        appName: "One-click DAO Builder",
+        apiDomain: websiteDomain,
+        websiteDomain: websiteDomain,
+        apiBasePath: "/auth",
+        websiteBasePath: "/auth"
+    },
+    recipeList: [
+        Session.init()
+    ]
+});
 
 
 const container = document.getElementById("root");
