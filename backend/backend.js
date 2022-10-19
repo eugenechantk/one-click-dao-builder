@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import supertokens from "supertokens-node";
 // import { middleware } from "supertokens-node/framework/express/index";
-import { appInfo } from "../src/config/appInfo";
+import { appInfo } from "./appInfo";
 
 const app = express();
 const port = 8000;
