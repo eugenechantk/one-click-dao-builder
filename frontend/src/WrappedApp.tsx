@@ -21,7 +21,7 @@ export const WrappedApp = (props: IWrappedAppProps) => {
   // If the user has previously logged in, the Magic Connect provider should have stored the user's signer, and can return the signer
   // If the user has not logged in previously, it will return nothing
   const [signer, setSigner] = useState(
-    provider?.getSigner() as ethers.Signer | undefined
+    undefined as ethers.Signer | undefined
   );
   const [userInfo, setUserInfo] = useState({} as any);
   const activeChainId = ChainId.Goerli;
