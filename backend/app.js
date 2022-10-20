@@ -1,41 +1,34 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express')
+const supertokens = require("supertokens-node")
+const Session = require("supertokens-node/recipe/session")
+const app = express()
+const port = 8000
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
-var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+supertokens.init({
+  framework: "express",
+  supertokens: {
+      // https://try.supertokens.com is for demo purposes. Replace this with the address of your core instance (sign up on supertokens.com), or self host a core.
+      connectionURI: process.env.SUPERTOKEN_CONNECT_URI,
+      apiKey: process.env.SUPETOKEN_CONNECT_KEY
+      // apiKey: "IF YOU HAVE AN API KEY FOR THE CORE, ADD IT HERE",
+  },
+  appInfo: {
+      // learn more about this on https://supertokens.com/docs/session/appinfo
+      appName: "One click DAO builder",
+      apiDomain: "http://localhost:8000",
+      websiteDomain: "http://localhost:3000",
+      apiBasePath: "/auth",
+      websiteBasePath: "/auth"
+  },
+  recipeList: [
+      Session.init()
+  ]
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
