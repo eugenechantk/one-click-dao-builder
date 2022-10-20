@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 import { useState } from "react";
 import App from "./App";
 import { supabase } from "./controllers/supabase";
-import { useSessionContext } from 'supertokens-auth-react/recipe/session';
 
 export interface IWrappedAppProps {
   provider: ethers.providers.Web3Provider;
@@ -13,8 +12,6 @@ export interface IWrappedAppProps {
 }
 
 export const WrappedApp = (props: IWrappedAppProps) => {
-  // Get Session from SuperTokens
-  let session = useSessionContext();
 
   const { provider, magic } = props;
   // Set the initial state of the signer as the signer that Magic Connect provider can get
