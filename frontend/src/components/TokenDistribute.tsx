@@ -263,7 +263,6 @@ export const TokenDistribute = () => {
         gasLimit: _gasLimit,
         gasPrice: gas_price,
       };
-      console.dir(tx);
       try {
         await wallet.sendTransaction(tx).then(async (transaction) => {
           // wait until the block is mined
@@ -305,15 +304,23 @@ export const TokenDistribute = () => {
     console.log(splitContract.getAddress());
     for (let token of splitBalance) {
       if (token.token_address) {
-        await splitContract
+        try {
+          await splitContract
           .distributeToken(String(token.token_address))
           .then((result) => {
             console.log(result);
           });
+        } catch (err) {
+          console.log(err);
+        }
       } else {
-        await splitContract.distribute().then((result) => {
-          console.log(result);
-        });
+        try {
+          await splitContract.distribute().then((result) => {
+            console.log(result);
+          });
+        } catch (err) {
+          console.log(err)
+        }
       }
     }
   };
