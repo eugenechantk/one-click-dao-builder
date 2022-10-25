@@ -19,7 +19,7 @@ export class ThirdWebController {
 
   constructor(wallet: ethers.Wallet) {
     this.sdk = this.init(wallet);
-    this.clubTokenAddress = localStorage.getItem("club_token_address") || "";
+    this.clubTokenAddress = String(localStorage.getItem("club_token_address")).replace(/['"]+/g, "") || "";
     this.claimCondition = [];
   }
 
