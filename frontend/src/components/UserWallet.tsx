@@ -23,7 +23,7 @@ export const UserWallet = (props: IUserWalletProps) => {
     return (
         <>
             <p>User's address: {address}</p>
-            <p>SDK's address: {sdkAddress}</p>
+            {/* <p>SDK's address: {sdkAddress}</p> */}
         </>
         
     )

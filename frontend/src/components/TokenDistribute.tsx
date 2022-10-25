@@ -185,14 +185,15 @@ export const TokenDistribute = () => {
           return metadata.name;
         });
       });
-    
-    console.log(_recipient);
     const splitContractAddress =
       await getAppControllers().thirdweb.sdk.deployer.deploySplit({
         name: `${contractName} Split`,
         recipients: _recipient,
       });
-
+      console.log(
+        "✅ Successfully deployed split contract, address:",
+        splitContractAddress
+      );
     setLocal("split_contract_address", splitContractAddress);
     setSplitAddress(splitContractAddress);
 
