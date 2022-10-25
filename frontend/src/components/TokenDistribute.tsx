@@ -203,11 +203,11 @@ export const TokenDistribute = () => {
 
   // function to burn all club tokens from token holders
   const burnAllTokens = async () => {
-    const clubTokenContract = await getAppControllers().thirdweb.sdk.getTokenDrop(clubTokenAddress);
+    const clubTokenContract = await getAppControllers().thirdweb.sdk.getContract(clubTokenAddress);
     const _holderBalance = await getAllHolder();
     Object.keys(_holderBalance).forEach(async (holder) => {
       const _balance = formatEther(_holderBalance[holder].balance.toString())
-      await clubTokenContract.burnFrom(holder, _balance).then(result => console.log(result));
+      await clubTokenContract.erc20.burnFrom(holder, _balance).then(result => console.log(result));
     })
   }
   const send_token = async (
