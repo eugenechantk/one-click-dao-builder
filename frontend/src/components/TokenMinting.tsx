@@ -15,7 +15,7 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
   const { userAddress } = props;
   const [nameInput, setNameInput] = useState("");
   const [symbolInput, setSymbolInput] = useState("");
-  const [dropTokenAddress, setDropTokenAddress] = useState("");
+  const [dropTokenAddress, setDropTokenAddress] = useState(getAppControllers().thirdweb.clubTokenAddress);
   const [loading, setLoading] = useState(false);
   const [amountToClaim, setAmountToClaim] = useState("");
   const clubTokenContract = useContract(dropTokenAddress);
