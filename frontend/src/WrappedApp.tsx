@@ -33,7 +33,13 @@ export const WrappedApp = (props: IWrappedAppProps) => {
     // If getSigner() does not return a signer, then that means no wallet is authenticated, and the login modal will pop up
     // If getSigner() returns a signer, that means a wallet is connected and no need to show login modal
     const _signer = await provider?.getSigner();
-    const _userInfo = await props.magic.connect.requestUserInfo();
+    let _userInfo;
+    try {
+      _userInfo = await props.magic.connect.requestUserInfo();
+    } catch (err) {
+      _userInfo = {email:""};
+    }
+    
     setUserInfo(_userInfo);
     setSigner(_signer);
     console.log(userInfo.email);
@@ -51,10 +57,10 @@ export const WrappedApp = (props: IWrappedAppProps) => {
     _walletAddress: string,
     _email: string = ""
   ) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("user")
-      .select("address")
-      .eq("address", _walletAddress);
+      .select()
+      .eq("wallet_address", _walletAddress);
     if (error) {
       const { data, error } = await supabase
         .from("user")
