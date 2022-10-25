@@ -29,18 +29,21 @@ export const TokenMinting = (props: ITokenMintingFCProps) => {
         symbolInput
       );
     const formattedAddress = dropTokenAddress.replace(/['"]+/g, "");
+    await getAppControllers().thirdweb.setClaimCondition();
     setDropTokenAddress(formattedAddress);
-    // addTokenController(formattedAddress);
-    // getAppControllers().token?.init(formattedAddress);
     setLoading(false);
   };
 
   const claimClubToken = async () => {
     setClaimTokenLoading(true);
-    const claimResult = await clubTokenContract.contract?.erc20.claim(
-      amountToClaim
-    );
-    console.log(claimResult);
+    try {
+      const claimResult = await clubTokenContract.contract?.erc20.claim(
+        amountToClaim
+      );
+      console.log(claimResult);
+    } catch (err) {
+      console.log(err);
+    }
     setClaimTokenLoading(false);
   };
 

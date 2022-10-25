@@ -1,14 +1,33 @@
 import walletconnectLogo from "./assets/walletconnect-logo.png";
 import { SUPPORTED_CHAINS } from "../constraints/chains";
-import { 
-    MAINNET_CHAIN_ID,
-    GOERLI_CHAIN_ID,
-    ETH_STANDARD_PATH
- } from "../constraints/default";
-import { IAppConfig } from "../helpers/types";
+import {
+  MAINNET_CHAIN_ID,
+  GOERLI_CHAIN_ID,
+  ETH_STANDARD_PATH,
+} from "../constraints/default";
 import { getRpcEngine } from "../engines";
+import { IChainData, IRpcEngine, IAppEvents } from "../helpers/types";
+export interface IAppConfig {
+  name: string;
+  logo: string;
+  chainId: number;
+  derivationPath: string;
+  numberOfAccounts: number;
+  colors: {
+    defaultColor: string;
+    backgroundColor: string;
+  };
+  chains: IChainData[];
+  styleOpts: {
+    showPasteUri: boolean;
+    showVersion: boolean;
+  };
+  rpcEngine: IRpcEngine;
+  events: IAppEvents;
+}
 
-const appConfig: IAppConfig = {
+
+export const appConfig: IAppConfig = {
   name: "WalletConnect",
   logo: walletconnectLogo,
   // Change this to change to testnet

@@ -10,6 +10,7 @@ import { UserWallet } from "./components/UserWallet";
 import { TokenMinting } from "./components/TokenMinting";
 import { ClubWallet } from "./components/ClubWallet";
 import { TokenDistribute } from "./components/TokenDistribute";
+
 export interface IAppState {
   loading: boolean;
   scanner: boolean;
@@ -322,8 +323,9 @@ class App extends React.Component<{}> {
       this.state;
     return (
       <>
+        <hr></hr>
         <h4>User's wallet</h4>
-        <ConnectWallet />
+        {/* <ConnectWallet /> */}
         <UserWallet
           setUserAddress={(userAddress) => this.setState({ userAddress })}
         />

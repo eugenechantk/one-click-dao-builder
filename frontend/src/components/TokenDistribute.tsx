@@ -140,13 +140,18 @@ export const TokenDistribute = () => {
     const _holderBalance = await getAllHolder();
     const _claimPowerBalance = await getClaimPower(_holderBalance);
     const _distibutionBalance = getTokenShareBalance(_claimPowerBalance);
+    console.log(_distibutionBalance);
     setHolderBalance(_distibutionBalance);
     setLoading(false);
   };
 
   const deploySplitContract = async () => {
-    const _holderBalance:{[k: string]: IHolderBalanceInfo} = await getAllHolder();
+    // get balance of all club token holders
+    const _holder:{[k: string]: IHolderBalanceInfo} = await getAllHolder();
+    // use the balance of all club token holders to determine each holder's power
+    const _holderBalance:{[k: string]: IHolderBalanceInfo} = await getClaimPower(_holder);
     let _recipient: { address: string; sharesBps: number }[] = [];
+    // console.log(_holderBalance);
 
     // For each holder of the token, populate the address and share percent in the format of the split contract
     Object.entries(_holderBalance).forEach(([address, value]) => {
@@ -180,6 +185,8 @@ export const TokenDistribute = () => {
           return metadata.name;
         });
       });
+    
+    console.log(_recipient);
     const splitContractAddress =
       await getAppControllers().thirdweb.sdk.deployer.deploySplit({
         name: `${contractName} Split`,

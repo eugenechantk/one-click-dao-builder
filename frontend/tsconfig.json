@@ -22,5 +22,5 @@
   },
   "include": [
     "src"
-  ]
+, "backend/appInfo.ts", "../backend/appInfo copy.ts"  ]
 }
